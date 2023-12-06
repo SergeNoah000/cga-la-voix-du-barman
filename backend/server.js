@@ -50,39 +50,6 @@ app.listen(8080, () => {
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-async function processXLSXFile(filePath) {
-  const workbook = new excel.Workbook();
-  await workbook.xlsx.readFile(filePath);
-
-  const worksheet = workbook.worksheets[0];
-  const records = [];
-
-  worksheet.eachRow((row, rowNumber) => {
-    if (rowNumber !== 1) {
-      const record = row.values;
-      records.push({
-        // Mappez les colonnes de votre fichier Excel aux colonnes de votre table contribuables
-        codeClient: record[1],
-        nomPrenoms: record[2],
-        niu: record[3],
-        paiementInscription: record[4],
-        paiementCotisation: record[5],
-        restePayerInscription: record[6],
-        restePayerCotisation: record[7],
-        numeroTel: record[8],
-        cdi: record[9],
-        localisation: record[10],
-        distributeur: record[11],
-        cgaActuel: record[12],
-      });
-    }
-  });
-
-  // Insérez les données dans la base de données en utilisant Knex
-  await database('contribuables').insert(records);
-}
-
-
 app.post('/api/login', async (req, res) => {
     try {
       const { username, password } = req.body;
@@ -218,6 +185,39 @@ app.get('/api/nouvelle-table', async (req, res) => {
 
 
 
+
+async function processXLSXFile(filePath) {
+  const workbook = new excel.Workbook();
+  await workbook.xlsx.readFile(filePath);
+
+  const worksheet = workbook.worksheets[0];
+  const records = [];
+
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber !== 1) {
+      const record = row.values;
+      records.push({
+        // Mappez les colonnes de votre fichier Excel aux colonnes de votre table contribuables
+        codeClient: record[1],
+        nomPrenoms: record[2],
+        niu: record[3],
+        paiementInscription: record[4],
+        paiementCotisation: record[5],
+        restePayerInscription: record[6],
+        restePayerCotisation: record[7],
+        numeroTel: record[8],
+        cdi: record[9],
+        localisation: record[10],
+        distributeur: record[11],
+        cgaActuel: record[12],
+      });
+    }
+  });
+
+  // Insérez les données dans la base de données en utilisant Knex
+  await database('contribuables').insert(records);
+}
+
 // Endpoint pour la mise à jour en ligne
 app.post('/mise-a-jour-en-ligne', upload.single('file'), async (req, res) => {
   try {
@@ -252,7 +252,7 @@ async function insertCsvIntoDatabase(csvData) {
   rows.shift();
 
   // Utiliser knex pour insérer les données dans la table contribuables
-  await database('nouvelle_table').insert(rows.map(row => {
+  await database('contribuables').insert(rows.map(row => {
     const rowData = {};
     headers.forEach((header, index) => {
       rowData[header] = row[index];

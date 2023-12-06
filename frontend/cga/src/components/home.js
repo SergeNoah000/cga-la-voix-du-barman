@@ -63,14 +63,14 @@ const HomePage = () => {
     // Charger la liste des contribuables depuis le backend
     const fetchContribuables = async () => {
       try {
-         await axios.get(`http://${domainName}:8080/api/nouvelle-table`)
+         /* await axios.get(`http://${domainName}:8080/api/nouvelle-table`)
          .then((res)=>{
           setNouvelles(res.data);
          })
          .catch((err)=>{
           console.log(err);
           setMessageerr(err.message)
-         })
+         }) */
         const response = await axios.get(`http://${domainName}:8080/api/contribuables`); // Assurez-vous que l'URL est correcte
         setContribuables(response.data);
       } catch (error) {
@@ -121,47 +121,63 @@ const HomePage = () => {
   <button className="btn btn-warning me-2" onClick={(e)=>{
     sessionStorage.removeItem('userInfo');
     navigateTo('/login');
-  }}>Deconnexion</button>
+  }}>Deconnexion</button> {contribuables && contribuables.length !==0 && (<><span style={{color:'green'}}> {contribuables.length} contribuables</span></>)}
 
   {messagerr && (<><div style={{color:'red'}}><h3>{messagerr}</h3></div></>)}
       <table className="table table-striped table-bordered mt-4">
         <thead>
           <tr>
+            <th>ID</th>
             <th>Code Client</th>
             <th>Noms et Prénoms</th>
             <th>NIU</th>
-            <th>Paiement Inscription</th>
-            <th>Paiement Cotisation</th>
-            <th>Reste à Payer Inscription</th>
-            <th>Reste à Payer Cotisation</th>
+            <th> Statut</th>
+            <th>Monant payé</th>
+            <th>Reste à payer</th>
             <th>Numéro Tel</th>
             <th>CDI</th>
             <th>Localisation</th>
             <th>Distributeur</th>
             <th>CGA Actuel</th>
+            <th>Ancien CGA</th>
           </tr>
         </thead>
         <tbody>
           {contribuables.map((contribuable, index) => {
-            const isNewContribuable = !nouvelles.some(
+           /*  const isNewContribuable = !nouvelles.some(
               (nouvelle) => nouvelle.raison_sociale.includes(contribuable.nomPrenoms)
-            );
-            const rowClass = isNewContribuable ? 'table-danger' : index % 2 === 0 ? 'table-primary' : 'table-secondary';
+            ); */
+            let rowClass =
+            contribuable.statut === "ancien"
+              ? 50000 - parseInt(contribuable.paiement) < 35000 &&
+                50000 - parseInt(contribuable.paiement) > 20000
+                ? 'table-danger'
+                : 50000 - parseInt(contribuable.paiement) <= 20000
+                ? 'table-warning'
+                : 'table-success'
+              : 75000 - parseInt(contribuable.paiement) < 55000 &&
+                75000 - parseInt(contribuable.paiement) > 25000
+              ? 'table-danger'
+              : 75000 - parseInt(contribuable.paiement) <= 25000
+              ? 'table-warning'
+              : 'table-danger';
+            /*  rowClass = contribuable.statut === "ancien" && contribuable.paiement ====50000? " */
         return (
           <>
-            <tr key={contribuable.id} className={rowClass} onClick={()=>{setShowModal(index)}} style={{ cursor:'pointer'}}>
+            <tr key={contribuable.id} /* className={rowClass} onClick={()=>{setShowModal(index)}} style={{ cursor:'pointer'}} */>
+              <td>{index+1 }</td>
               <td>{contribuable.codeClient}</td>
-              <td>{contribuable.nomPrenoms}</td>
+              <td>{contribuable.raison_sociale}</td>
               <td>{contribuable.niu}</td>
-              <td>{contribuable.paiementInscription}</td>
-              <td>{contribuable.paiementCotisation}</td>
-              <td>{contribuable.restePayerInscription}</td>
-              <td>{contribuable.restePayerCotisation}</td>
-              <td>{contribuable.numeroTel}</td>
-              <td>{contribuable.cdi}</td>
+              <td>{contribuable.statut}</td>
+              <td>{contribuable.paiement}</td>
+              <td>{contribuable.statut === "ancien" ? 50000 - parseInt(contribuable.paiement) : 70000 - contribuable.paiement}</td>
+              <td>{contribuable.tel}</td>
+              <td>{contribuable.codeunitegestion}</td>
               <td>{contribuable.localisation}</td>
               <td>{contribuable.distributeur}</td>
-              <td>{contribuable.cgaActuel}</td>
+              <td>{contribuable.cga}</td>
+              <td>{contribuable.ancienCga}</td>
             </tr>
             {userInf && userInf.role === 'administrateur' && (
             <>

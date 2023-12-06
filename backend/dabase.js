@@ -32,7 +32,7 @@ function encryptTextWithKey(text, ke) {
 
 async function createTables() {
 
-// Table "schools"
+// Table "users"
 const tableExists = await database.schema.hasTable('users');
 if (!tableExists) {
   await database.schema.createTable('users', (table) => {
@@ -62,31 +62,10 @@ if (!tableExists) {
     }
 }
 
-const contrib = await database.schema.hasTable('contribuables');
-if (!contrib) {
-  await database.schema.createTable('contribuables', (table) => {
-    table.increments('id').primary();
-    table.string('codeClient').notNullable().unique();
-    table.string('nomPrenoms').notNullable();
-    table.string('niu').notNullable().unique();
-    table.string('paiementInscription').nullable();
-    table.string('paiementCotisation').nullable();
-    table.string('restePayerInscription').nullable();
-    table.string('restePayerCotisation').nullable();
-    table.string('numeroTel').nullable();
-    table.string('cdi').nullable();
-    table.string('localisation').nullable();
-    table.string('distributeur').nullable();
-    table.string('cgaActuel').nullable();
-    table.timestamps(true, true); // Ajoute des colonnes 'created_at' et 'updated_at'
-  });
-  console.log('Table "contribuables" créée dans la base de données');
-};
-// Vérifiez si la table existe avant de la créer
-const nouvelle_table = await database.schema.hasTable('nouvelle_table');
+const contribuables = await database.schema.hasTable('contribuables');
 
-if (!nouvelle_table) {
-  await database.schema.createTable('nouvelle_table', (table) => {
+if (!contribuables) {
+  await database.schema.createTable('contribuables', (table) => {
     table.increments('id').primary();
     table.string('n°');
     table.string('raison_sociale');
@@ -101,12 +80,19 @@ if (!nouvelle_table) {
     table.string('cga');
     table.string('codeunitegestion');
     table.string('unite_gestion');
+    table.string('codeClient').nullable().unique();
+    table.bigInteger('paiement').notNullable().default(0);
+    table.string('statut').notNullable().default("nouveau");
+    table.string('localisation').nullable();
+    table.string('distributeur').nullable();
+    table.string('ancienCga').nullable();
     table.dateTime('creation_date').defaultTo(database.fn.now());
     table.dateTime('update_date').defaultTo(database.fn.now());
   });
 
   console.log('Table "nouvelle_table" créée dans la base de données');
 }
+
 
 }
 

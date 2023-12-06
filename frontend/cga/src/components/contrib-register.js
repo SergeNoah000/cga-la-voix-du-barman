@@ -6,15 +6,15 @@ const RegistrationForm = () => {
     codeClient: '',
     nomPrenoms: '',
     niu: '',
-    paiementInscription: '',
-    paiementCotisation: '',
-    restePayerInscription: '',
-    restePayerCotisation: '',
+    statut: '',
+    paiement: '',
     numeroTel: '',
     cdi: '',
     localisation: '',
     distributeur: '',
     cgaActuel: '',
+    reste:0,
+    ancienCga:'',
   });
   const [message, setMessage] = useState(''); 
   const [messagerr, setMessager] = useState(''); 
@@ -30,6 +30,7 @@ const RegistrationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      formData['cgaActuel'] = "LA VOIX DU BARMAN";
         // Envoi des données du formulaire à la route avec Axios
          await axios.post(`http://${domainName}:8080/api/contrib-register`, formData)
          .then((res)=>{
@@ -90,45 +91,50 @@ const RegistrationForm = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Paiement Effectué pour l'Inscription</label>
-              <input
-                type="number"
-                className="form-control"
-                name="paiementInscription"
-                value={formData.paiementInscription}
-                onChange={handleChange}
-              />
+              <label className="form-label">Statut</label>
+              <select className="form-select" name="statut" 
+                value={formData.statut}
+                onChange={(e)=>{
+                  setFormData({ ...formData, [e.target.name]: e.target.value });
+                  if (e.target.value === "ancien") {
+                    setFormData({ ...formData, ['reste']: 50000 });
+                  } else {
+                    setFormData({ ...formData, ['reste']: 75000 });                    
+                  }
+                }} required ></select>
+              <option value="">------------</option>
+              <option value="ancien"> Ancien </option>
+              <option value="nouveau">   Nouveau   </option>
+              
             </div>
             <div className="mb-3">
               <label className="form-label">Paiement Effectué pour la Cotisation</label>
               <input
                 type="number"
                 className="form-control"
-                name="paiementCotisation"
-                value={formData.paiementCotisation}
-                onChange={handleChange}
+                name="paiement"
+                value={formData.paiement}
+                onChange={(e)=>{
+                  setFormData({ ...formData, [e.target.name]: e.target.value });
+                  if (e.target.value === "ancien") {
+                    setFormData({ ...formData, ['reste']: 50000-e.target.value });
+                  } else {
+                    setFormData({ ...formData, ['reste']: 75000-e.target.value });
+                  }
+                }}
               />
             </div>
           </div>
           <div className="col-md-6">
             <div className="mb-3">
-              <label className="form-label">Reste à Payer pour l'Inscription</label>
+              <label className="form-label">Reste à Payer</label>
               <input
                 type="number"
                 className="form-control"
-                name="restePayerInscription"
-                value={formData.restePayerInscription}
+                name="reste"
+                value={formData.reste}
                 onChange={handleChange}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Reste à Payer pour la Cotisation</label>
-              <input
-                type="number"
-                className="form-control"
-                name="restePayerCotisation"
-                value={formData.restePayerCotisation}
-                onChange={handleChange}
+                disabled={true}
               />
             </div>
             <div className="mb-3">
@@ -171,19 +177,21 @@ const RegistrationForm = () => {
                 onChange={handleChange}
               />
             </div>
+            {formData.statut && formData.statut === 'ancien' && (<>
             <div className="mb-3">
-              <label className="form-label">CGA Actuel</label>
+              <label className="form-label"> Ancien CGA </label>
               <input
                 type="text"
                 className="form-control"
-                name="cgaActuel"
-                value={formData.cgaActuel}
+                name="ancienCga"
+                value={formData.ancienCga}
                 onChange={handleChange}
               />
             </div>
+            </>)}
           </div>
           {message && (<><h4 style={{color:'green'}}>{message}</h4></>)}
-          {messagerr && (<><h4 style={{color:'red'}}>{message}</h4></>)}
+          {messagerr && (<><h4 style={{color:'red'}}>{messagerr}</h4></>)}
         </div>
         <button type="submit" className="btn btn-primary">Enregistrer</button>
       </form>
