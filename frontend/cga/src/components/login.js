@@ -33,7 +33,18 @@ const Login = () => {
       })
       .catch((err)=>{
         console.log(err);
-        setStatus(err.message)
+        setStatus(err.message);
+        const id = setTimeout(() => {
+          setStatus('');
+        }, 4000);
+      
+        // Définir une fonction de rappel pour annuler la temporisation
+        const cancel = () => {
+          clearTimeout(id);
+        };
+      
+        // Annuler la temporisation après 5 secondes
+        setTimeout(cancel, 5000);
       })
 
     } catch (error) {
@@ -87,6 +98,12 @@ const Login = () => {
                       Login
                     </button>
                   </div>
+                  <br/>
+                  {status && (
+                  <div className="mb-3 align-items-center">
+                    <h4 style ={{color:'red'}}> {status}</h4>
+                  </div>
+                  )}
                 </form>
               </div>
               <div className="card-footer py-3 border-0">

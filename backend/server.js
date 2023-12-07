@@ -95,10 +95,11 @@ app.put('/api/contrib-update/:codeClient', async (req, res) => {
   try {
     const { codeClient } = req.params;
     const updatedContribuable = req.body;
+    console.log(updatedContribuable);
 
     // Mettre à jour le client dans la base de données
     const updateResult = await database('contribuables')
-      .where({ codeClient: codeClient })
+      .where({ id: codeClient })
       .update(updatedContribuable);
 
     if (updateResult === 0) {
@@ -118,36 +119,9 @@ app.put('/api/contrib-update/:codeClient', async (req, res) => {
   // Route pour enregistrer un contribuable
 app.post('/api/contrib-register', async (req, res) => {
   try {
-    const {
-      codeClient,
-      nomPrenoms,
-      niu,
-      paiementInscription,
-      paiementCotisation,
-      restePayerInscription,
-      restePayerCotisation,
-      numeroTel,
-      cdi,
-      localisation,
-      distributeur,
-      cgaActuel,
-    } = req.body;
 
     // Insérez les données du contribuable dans la table 'contribuables'
-    await database('contribuables').insert({
-      codeClient,
-      nomPrenoms,
-      niu,
-      paiementInscription,
-      paiementCotisation,
-      restePayerInscription,
-      restePayerCotisation,
-      numeroTel,
-      cdi,
-      localisation,
-      distributeur,
-      cgaActuel,
-    });
+    await database('contribuables').insert(req.body);
 
     res.json({ msg: 'Contribuable enregistré avec succès !' });
   } catch (error) {
@@ -156,11 +130,18 @@ app.post('/api/contrib-register', async (req, res) => {
   }
 });
 
-// Route pour récupérer la liste des contribuables
+// Route pour récupérer la liste des contribuables avec pagination
 app.get('/api/contribuables', async (req, res) => {
   try {
-    // Récupérer tous les contribuables depuis la table 'contribuables'
-    const contribuables = await database.select().from('contribuables');
+    const page = req.query.page || 1;
+    const pageSize = 20; // Nombre d'éléments par page
+
+    // Calculer l'offset en fonction de la page
+    const offset = (page - 1) * pageSize;
+
+    // Récupérer les contribuables avec pagination depuis la table 'contribuables'
+    const contribuables = await database.select().from('contribuables').offset(offset).limit(pageSize);
+
     res.json(contribuables);
   } catch (error) {
     console.error('Erreur lors de la récupération des contribuables :', error.message);
@@ -168,6 +149,18 @@ app.get('/api/contribuables', async (req, res) => {
   }
 });
 
+/* 
+app.get('/api/contribuables', async (req, res) => {
+  try {
+    const contribuables = await database.select().from('contribuables');
+
+    res.json(contribuables);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des contribuables :', error.message);
+    res.status(500).json({ error: 'Erreur interne du serveur lors de la récupération des contribuables' });
+  }
+});
+ */
 // Endpoint pour récupérer la liste des éléments avec la dernière date de modification
 app.get('/api/nouvelle-table', async (req, res) => {
   try {

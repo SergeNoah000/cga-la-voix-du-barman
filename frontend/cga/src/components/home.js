@@ -1,7 +1,5 @@
 
 
-
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
@@ -19,13 +17,18 @@ const HomePage = () => {
   const [userInf, setUserInf] = useState([]);
   const [selectedOrigin, setSelectedOrigin] = useState('');
   const [showModal, setShowModal] = useState(-1);
-  const navigateTo = useNavigate()
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const navigateTo = useNavigate();
   const url = new URL(window.location.href);
   const domainName = url.hostname.replace(/^www\./, '');
   const largeurEcran = window.innerWidth;
+
+
+
   const handleSearch = () => {
   const filteredByName = contribuables.filter((contribuable) =>
-    contribuable.nomPrenoms.toLowerCase().includes(searchName.toLowerCase())
+    contribuable.raison_sociale.toLowerCase().includes(searchName.toLowerCase())
   );
 
   const filteredByOrigin = selectedOrigin
@@ -58,32 +61,44 @@ const HomePage = () => {
             
     }
 }
+  const fetchContribuables = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`http://${domainName}:8080/api/contribuables?page=${currentPage}`);
+      setContribuables((prevContribuables) => [...prevContribuables, ...response.data]);
+      setCurrentPage(currentPage + 1);
+      setLoading(false);
+    } catch (error) {
+      console.error('Erreur lors du chargement des contribuables :', error.message);
+      setLoading(false);
+    }
+  };
+
+  const handleScroll = () => {
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    const scrollTop = window.scrollY;
+
+    if (scrollTop + windowHeight >= documentHeight - 400 && !loading) {
+      fetchContribuables();
+    }
+  };
+
+
+    useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [loading, currentPage]);
 
   useEffect(() => {
-    // Charger la liste des contribuables depuis le backend
-    const fetchContribuables = async () => {
-      try {
-         /* await axios.get(`http://${domainName}:8080/api/nouvelle-table`)
-         .then((res)=>{
-          setNouvelles(res.data);
-         })
-         .catch((err)=>{
-          console.log(err);
-          setMessageerr(err.message)
-         }) */
-        const response = await axios.get(`http://${domainName}:8080/api/contribuables`); // Assurez-vous que l'URL est correcte
-        setContribuables(response.data);
-      } catch (error) {
-        console.error('Erreur lors du chargement des contribuables :', error.message);
-      }
-    };
     if (userInf.length === 0) {
       getUserInfos();
     }
-
-
     fetchContribuables();
   }, []);
+
 
   return (
   <div className="container mt-5">
@@ -155,16 +170,15 @@ const HomePage = () => {
                 : 50000 - parseInt(contribuable.paiement) <= 20000
                 ? 'table-warning'
                 : 'table-success'
-              : 75000 - parseInt(contribuable.paiement) < 55000 &&
-                75000 - parseInt(contribuable.paiement) > 25000
+              :contribuable.statut === "nouveau" && 75000 - parseInt(contribuable.paiement) > 35000 
               ? 'table-danger'
-              : 75000 - parseInt(contribuable.paiement) <= 25000
+              : contribuable.statut === "nouveau" &&   75000 - parseInt(contribuable.paiement) <= 35000 && 75000 - parseInt(contribuable.paiement) > 5000
               ? 'table-warning'
-              : 'table-danger';
-            /*  rowClass = contribuable.statut === "ancien" && contribuable.paiement ====50000? " */
+              : contribuable.statut === "nouveau" &&   75000 - parseInt(contribuable.paiement)  <= 5000 ? "table-success"
+              : '';
         return (
           <>
-            <tr key={contribuable.id} /* className={rowClass} onClick={()=>{setShowModal(index)}} style={{ cursor:'pointer'}} */>
+            <tr key={contribuable.id}  className={rowClass} onClick={()=>{setShowModal(index)}} style={{ cursor:'pointer', backgroundColor: rowClass === "table-success" ? 'chartreuse' : "inherit" }} >
               <td>{index+1 }</td>
               <td>{contribuable.codeClient}</td>
               <td>{contribuable.raison_sociale}</td>
@@ -176,21 +190,21 @@ const HomePage = () => {
               <td>{contribuable.codeunitegestion}</td>
               <td>{contribuable.localisation}</td>
               <td>{contribuable.distributeur}</td>
-              <td>{contribuable.cga}</td>
+              <td style={contribuable.cga === "LA VOIX DU BARMAN" ? {backgroundColor:'honeydew'}:{backgroundColor:'tomato'}} >{contribuable.cga}</td>
               <td>{contribuable.ancienCga}</td>
             </tr>
             {userInf && userInf.role === 'administrateur' && (
             <>
             <div className={`modal`} tabIndex="-1" role="dialog" style={{display:showModal === index ? "block":"none"}}>
             <div className="modal-dialog" role="document">
-              <div className="modal-content container mt-0" style={{position:'relative', wdth:`${largeurEcran-35}px`}}>
+              <div className="modal-content container mt-0" style={ {wdth:`${largeurEcran-35}px`}}>
                 <div className="modal-header">
                   <h5 className="modal-title">Mettez à jour</h5>
                   <button type="button" className="close" onClick={() => setShowModal(-1)} aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                   </button>
                 </div>
-                <div className="modal-body row">
+                <div className="modal-body row overflow-auto">
                   {/* Champ de fichier XLS */}
                   {<UpdateForm data={contribuable} />}
                 </div>
