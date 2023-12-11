@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import CryptoJS from 'crypto-js';
+import ENCRYPTION_KEY from './../key'
 
 const RegistrationForm = () => {
   const [codeClient, setCodeClient] = useState('');
@@ -10,6 +12,7 @@ const RegistrationForm = () => {
   const [paiement, setPaiement] = useState('');
   const [numeroTel, setNumeroTel] = useState('');
   const [cdi, setCdi] = useState('');
+  const [userInf, setUserInf] = useState([]);
   const [localisation, setLocalisation] = useState('');
   const [distributeur, setDistributeur] = useState('');
   const [cgaActuel, setCgaActuel] = useState('');
@@ -20,6 +23,30 @@ const RegistrationForm = () => {
 
   const url = new URL(window.location.href);
   const domainName = url.hostname.replace(/^www\./, '');
+
+
+
+  const navigateTo = useNavigate();
+
+
+  function getUserInfos(){
+    try {
+        const encryptedData = sessionStorage.getItem('userInfo');
+        if (encryptedData) {
+            const decryptedData = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY.ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8);
+            if (decryptedData) {
+            const userInfo = JSON.parse(decryptedData);
+            setUserInf(userInfo)
+            }
+        }else{
+            navigateTo('/login');
+        }}catch(err){
+            
+    }
+}
+
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,14 +63,14 @@ const RegistrationForm = () => {
         codeunitegestion : cdi,
         localisation : localisation,
         distributeur: distributeur,
-        cga : cgaActuel,
+        cga : cgaActuel.trim() === ''?"LA VOIX DU BARMAN": cgaActuel,
         ancienCga: ancienCga,
+        userId:userInf.id,
       }
 
       // Envoi des données du formulaire à la route avec Axios
       await axios.post(`http://${domainName}:8080/api/contrib-register`, data)
         .then((res) => {
-          console.log(res.data);
           setMessage(res.data.msg);
           const id = setTimeout(() => {
             setMessager('');
@@ -95,10 +122,13 @@ const RegistrationForm = () => {
     console.log('Formulaire soumis.\n');
   };
 
+  useEffect(() => {
+    if (userInf.length === 0) {
+      getUserInfos();
+    }
+  }, []);
   return (
     <div className="container mt-5">
-      <div className='block'><Link to='/'>Accueil</Link></div>
-      <h2 className="mb-4">Enregistrement d'un Contribuable</h2>
       <form onSubmit={handleSubmit}>
         <div className="row">
           <div className="col-md-6">

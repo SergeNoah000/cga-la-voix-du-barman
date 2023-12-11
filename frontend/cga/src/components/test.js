@@ -1,55 +1,186 @@
+import React, { useEffect, useState } from 'react';
+import { Nav, NavItem, NavLink, TabContent, TabPane, Container, Row, Col } from 'reactstrap';
+import RegistrationForm from './contrib-register';
+import ListContrib from './listContrib';
+import SearchForm from './searchForm';
+import Register from './register';
+import ListPage from './listPage';
+import ValidateContrib from './validate';
+import DgiCompare from './dgicompare';
+import CryptoJS from 'crypto-js';
+import ENCRYPTION_KEY from './../key'
+import { useNavigate } from 'react-router-dom';
 
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+const MultipleNavTables = () => {
+  const [activeTab, setActiveTab] = useState('1');
+  const [userInf, setUserInf] = useState([]);
+  
+  const navigateTo = useNavigate();
 
-const ScrollLogger = () => {
-  const [scrollPercentage, setScrollPercentage] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const scrollRef = useRef(null);
+  const url = new URL(window.location.href);
+  const domainName = url.hostname.replace(/^www\./, '');
 
-  const handleScroll = () => {
-    const scrollPosition = window.scrollY;
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
-
-    const calculatedScrollPercentage = (scrollPosition / (documentHeight - windowHeight)) * 100;
-
-    setScrollPercentage(calculatedScrollPercentage.toFixed(2));
-
-    // Envoyer une requête au backend lorsque vous atteignez le bas de la page (par exemple, à 90%)
-    if (calculatedScrollPercentage >= 90) {
-      sendTestRequest();
+  const toggle = (tab) => {
+    if (activeTab !== tab) {
+      setActiveTab(tab);
     }
-  };
-
-  const sendTestRequest = async () => {
-    try {
-      // Vous pouvez personnaliser votre requête ici
-      const response = await axios.get(`http://localhost:8080/api/contribuables?page=${currentPage}`);
-      console.log(`Test request response for page ${currentPage}:`, response.data);
-
-      // Incrémenter le numéro de page
-      setCurrentPage(currentPage + 1);
-    } catch (error) {
-      console.error('Error sending test request:', error.message);
-    }
-  };
+  }
 
   useEffect(() => {
-    // Attach the scroll event listener
-    window.addEventListener('scroll', handleScroll);
+    if (userInf.length === 0) {
+      getUserInfos();
+    }
+  }, [])
 
-    // Clean up the event listener on component unmount
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [currentPage]);
+  const getUserInfos = () => {
+    try {
+      const encryptedData = sessionStorage.getItem('userInfo');
+      if (encryptedData) {
+        const decryptedData = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY.ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8);
+        if (decryptedData) {
+          const userInfo = JSON.parse(decryptedData);
+          setUserInf(userInfo);
+          console.log(userInfo);
+        }
+      } else {
+        navigateTo('/login');
+      }
+    } catch (err) {}
+  }
+
+  const tableLinkStyle = {
+    color: 'blue',
+    fontWeight: 'bold',
+    cursor: 'pointer'
+  };
 
   return (
-    <div ref={scrollRef} style={{ height: '200vh' }}>
-      <p>Scroll Percentage: {scrollPercentage}%</p>
-    </div>
-  );
-};
+    <>
+      <Container className='mt-5 center col ' style={{ maxWidth: "1600px" }}>
+         <div className="container-fluid">
+          <div className="row">
+            <div className="col">
+              <h5 className="text-center mt-5 ">
+                CENTRE DE GESTION AGREE <span style={{color:"blue",fontWeight: 'bold', }}>LA VOIX DU BARMAN</span> Agrément n° 00000596/MINFI/DGI/LRI/CSR du 23 nov 2022.
+              </h5>
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'row', backgroundImage: `url('/logo512.png')`, backgroundRepeat: "no-repeat", backgroundSize: "cover", padding: '80px', marginBottom: "20px" }}>
+          <span></span>
+        </div>
+        <Row>
+          <Col>
+            <Nav tabs>
+              <NavItem>
+                <NavLink
+                  style={tableLinkStyle}
+                  className={{ active: activeTab === '1' }}
+                  onClick={() => toggle('1')}
+                >
+                  Ajout d'un Contribuable
+                </NavLink>
+              </NavItem>
+              {userInf && (userInf.role === "administrateur" || userInf.role === "secretaire" ) &&(
+                <>
+                  <NavItem>
+                    <NavLink
+                      style={tableLinkStyle}
+                      className={{ active: activeTab === '2' }}
+                      onClick={() => toggle('2')}
+                    >
+                      Tous les Contribualles
+                    </NavLink>
+                  </NavItem>
+                  <NavItem>
+                    <NavLink
+                      style={tableLinkStyle}
+                      className={{ active: activeTab === '3' }}
+                      onClick={() => toggle('3')}
+                    >
+                      Recherche
+                    </NavLink>
+                  </NavItem>
+                  <NavItem>
+                    <NavLink
+                      style={tableLinkStyle}
+                      className={{ active: activeTab === '4' }}
+                      onClick={() => toggle('4')}
+                    >
+                      Importer xlsx
+                    </NavLink>
+                  </NavItem>
+                  {userInf && (userInf.role === "administrateur") && (
+                  <NavItem>
+                    <NavLink
+                      style={tableLinkStyle}
+                      className={{ active: activeTab === '5' }}
+                      onClick={() => toggle('5')}
+                    >
+                      Valider/Invalider
+                    </NavLink>
+                  </NavItem>
+                  )}
+                  <NavItem>
+                    <NavLink
+                      style={tableLinkStyle}
+                      className={{ active: activeTab === '6' }}
+                      onClick={() => toggle('6')}
+                    >
+                      DGI
+                    </NavLink>
+                  </NavItem>
+                  <NavItem>
+                    <NavLink
+                      style={tableLinkStyle}
+                      className={{ active: activeTab === '7' }}
+                      onClick={() => toggle('7')}
+                    >
+                    Archives
+                    </NavLink>
+                    {/*<NavLink
+                      style={tableLinkStyle}
+                      className={{ active: activeTab === '8' }}
+                      onClick={() => toggle('8')}
+                    >
+                      ajout utilisateur
+                    </NavLink>*/}
+                  </NavItem>
+                </>
+              )}
+            </Nav>
+            <TabContent activeTab={activeTab}>
+              <TabPane tabId="1">
+                <RegistrationForm />
+              </TabPane>
+              <TabPane tabId="2">
+                <ListContrib />
+              </TabPane>
+              <TabPane tabId="3">
+                <SearchForm />
+              </TabPane>
+              <TabPane tabId="4">
+                <ListPage />
+              </TabPane>
+              <TabPane tabId="5">
+                <ValidateContrib />
+              </TabPane>
+              <TabPane tabId="6">
+                <DgiCompare />
+              </TabPane>
+              <TabPane tabId="7">
+              <DgiCompare />
+              </TabPane>
 
-export default ScrollLogger;
+              <TabPane tabId="8">
+              <Register />
+              </TabPane>
+            </TabContent>
+          </Col>
+        </Row>
+      </Container>
+    </>
+  );
+}
+
+export default MultipleNavTables;

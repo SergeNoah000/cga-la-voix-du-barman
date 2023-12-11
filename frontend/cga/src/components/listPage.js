@@ -37,7 +37,15 @@ const ListPage = () => {
   return (
     <div>
       {/* Bouton pour ouvrir le modal */}
-      <button className='btn btn-success ' style={{marginLeft:"5px"}} onClick={() => setShowModal(true)}>Mise à jour en ligne</button>
+      <div className="modal-body row">
+              {/* Champ de fichier XLS */}
+              {message && (<><h4 style={{color:"green" }}>{message}</h4></>) }
+              <input type="file" onChange={handleFileChange} />
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-primary" onClick={()=>{handleUpload()}}>Envoyer</button>
+              <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Fermer</button>
+            </div>
 
       {/* Modal */}
       <div className={`modal`} tabIndex="-2" role="dialog" style={{display:showModal? "block":"none"}}>

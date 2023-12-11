@@ -38,6 +38,7 @@ if (!tableExists) {
   await database.schema.createTable('users', (table) => {
     table.increments('id').primary();
     table.string('username').notNullable().unique();
+    table.string('fullname').notNullable();
     table.string('password').notNullable();
     table.text('description').nullable();
     table.string('email').nullable().unique();
@@ -49,6 +50,7 @@ if (!tableExists) {
   console.log(' Table "users" created in database');
   try {
     await database('users').insert({
+        fullname: "President Administrateur",
         username: "admin",
         password: encryptTextWithKey("cga-admin", ENCRYPTION_KEY.ENCRYPTION_KEY),
         role:'administrateur',
@@ -57,6 +59,16 @@ if (!tableExists) {
         description: "Administrateur suppreme du site",
       });
     console.info("Default user created: \n username: 'admin'\n password: 'cga-admin' \n ");
+    await database('users').insert({
+        fullname: "Léticia Secretaire",
+        username: "Leticia",
+        password: encryptTextWithKey("cga-secret", ENCRYPTION_KEY.ENCRYPTION_KEY),
+        role:'secretaire',
+        creationDate: database.raw('now()'),
+        updateDate: database.raw('now()'),
+        description: "Administrateur suppreme du site",
+      });
+    console.info("Default user created: \n username: 'Leticia'\n password: 'cga-secret' \n ");
   } catch (error) {
       console.log(error);
     }
@@ -82,10 +94,16 @@ if (!contribuables) {
     table.string('unite_gestion');
     table.string('codeClient').nullable().unique();
     table.bigInteger('paiement').notNullable().default(0);
-    table.string('statut').notNullable().default("nouveau");
+    table.string('statut').notNullable().default("ancien");
     table.string('localisation').nullable();
     table.string('distributeur').nullable();
     table.string('ancienCga').nullable();
+   
+    table.integer('userId').unsigned().references('id').inTable('users');
+    table.boolean('validate').defaultTo(false);
+    table.boolean('traite').defaultTo(false);
+    table.boolean('upToDate').defaultTo(false);
+
     table.dateTime('creation_date').defaultTo(database.fn.now());
     table.dateTime('update_date').defaultTo(database.fn.now());
   });

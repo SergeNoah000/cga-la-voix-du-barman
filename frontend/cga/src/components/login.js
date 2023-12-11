@@ -25,12 +25,25 @@ const Login = () => {
       // Make a request to the server to authenticate the user
        await axios.post(`http://${domainName}:8080/api/login`, { username:username, password: encryptedPassword })
       .then((res)=>{
-        console.log(res.data);
         setStatus(res.data.msg)
+        if (res.status === 202) {
+          const id = setTimeout(() => {
+          setStatus('');
+        }, 4000);
+      
+        // Définir une fonction de rappel pour annuler la temporisation
+        const cancel = () => {
+          clearTimeout(id);
+        };
+      
+        // Annuler la temporisation après 5 secondes
+        setTimeout(cancel, 5000);
+      
+      }else{
         const encryptedData = CryptoJS.AES.encrypt(JSON.stringify(res.data.user), ENCRYPTION_KEY.ENCRYPTION_KEY).toString();
         sessionStorage.setItem('userInfo', encryptedData);
         navagateTo('/');
-      })
+      }})
       .catch((err)=>{
         console.log(err);
         setStatus(err.message);

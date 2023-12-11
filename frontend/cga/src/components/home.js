@@ -3,11 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import ListPage from './listPage';
 import CryptoJS from 'crypto-js';
 import ENCRYPTION_KEY from './../key'
-import UpdateForm from './contrib-update';
 import UserRegister from './user-register';
+import MultipleNavTables from './test';
 
 const HomePage = () => {
   const [searchName, setSearchName] = useState('');
@@ -24,9 +23,13 @@ const HomePage = () => {
   const domainName = url.hostname.replace(/^www\./, '');
   const largeurEcran = window.innerWidth;
 
+  const style = {
+    color: '#737373', // Couleur de police gris clair
+  };
 
 
-  const handleSearch = () => {
+
+/*   const handleSearch = () => {
   const filteredByName = contribuables.filter((contribuable) =>
     contribuable.raison_sociale.toLowerCase().includes(searchName.toLowerCase())
   );
@@ -44,7 +47,8 @@ const HomePage = () => {
     setSearchName('');
     setSelectedOrigin('');
     setContribuables(contribuables);
-  };
+  }; */
+
   function getUserInfos(){
     try {
         const encryptedData = sessionStorage.getItem('userInfo');
@@ -96,50 +100,31 @@ const HomePage = () => {
     if (userInf.length === 0) {
       getUserInfos();
     }
-    fetchContribuables();
   }, []);
 
 
   return (
   <div className="container mt-5">
-  <div style={{display:'flex', flexDirection:'row', backgroundImage:`url('/logo512.png')` }}>
-    <h2 className="mb-4 me-4">Liste des Contribuables</h2>
-    <ListPage />
-  </div>
-  <div className="mb-3">
-    <label className="form-label">Rechercher par nom :</label>
-    <input
-      type="text"
-      className="form-control"
-      value={searchName}
-      onChange={(e) => setSearchName(e.target.value)}
-    />
-  </div>
-  <div className="mb-3">
-    <label className="form-label">Filtrer par Nom :</label>
-    <select
-      className="form-select"
-      value={selectedOrigin}
-      onChange={(e) => setSelectedOrigin(e.target.value)}
-    >
-      <option value="">Toutes les origines</option>
-      {[...new Set(contribuables.map(fruit => fruit.localisation))].map((origin, index) => (
-        <option key={index} value={origin}>{origin}</option>
-      ))}
-    </select>
-  </div>
-  <button className="btn btn-primary me-2" onClick={handleSearch}>Rechercher</button>
-  <button className="btn btn-secondary" onClick={handleReset}>Réinitialiser</button>
-  
-  <span> Enregistrer un nouveau Contribuable <Link to='/contrib-register'> sur cette page</Link></span><br/>
+ 
+    <MultipleNavTables/>
             {userInf && userInf.role === 'administrateur' && ( <UserRegister />)} <br/>
   <button className="btn btn-warning me-2" onClick={(e)=>{
     sessionStorage.removeItem('userInfo');
     navigateTo('/login');
-  }}>Deconnexion</button> {contribuables && contribuables.length !==0 && (<><span style={{color:'green'}}> {contribuables.length} contribuables</span></>)}
-
+  }}>Deconnexion</button> 
+  <div className="container-fluid">
+      <div className="row">
+        <div className="col">
+          <p className="text-center mt-5 mb-3" style={style}>
+            SIEGE SOCIAL: Yaoundé-carrefour Biyem-Assi en face du distributeur PEMIAF <br />
+            Tel: 699 42 56 97 / 651 92 96 97 <br />
+            Email: lavoixdubarman@gmail.com
+          </p>
+        </div>
+      </div>
+    </div>
   {messagerr && (<><div style={{color:'red'}}><h3>{messagerr}</h3></div></>)}
-      <table className="table table-striped table-bordered mt-4">
+      {/* <table className="table  table-bordered mt-4">
         <thead>
           <tr>
             <th>ID</th>
@@ -155,43 +140,41 @@ const HomePage = () => {
             <th>Distributeur</th>
             <th>CGA Actuel</th>
             <th>Ancien CGA</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
           {contribuables.map((contribuable, index) => {
-           /*  const isNewContribuable = !nouvelles.some(
-              (nouvelle) => nouvelle.raison_sociale.includes(contribuable.nomPrenoms)
-            ); */
+  
             let rowClass =
             contribuable.statut === "ancien"
-              ? 50000 - parseInt(contribuable.paiement) < 35000 &&
-                50000 - parseInt(contribuable.paiement) > 20000
-                ? 'table-danger'
-                : 50000 - parseInt(contribuable.paiement) <= 20000
-                ? 'table-warning'
-                : 'table-success'
-              :contribuable.statut === "nouveau" && 75000 - parseInt(contribuable.paiement) > 35000 
+              ? parseInt(contribuable.paiement) === 50000 ? 'blanc':
+               parseInt(contribuable.paiement) === 0 ? 'table-danger' :
+                50000 - parseInt(contribuable.paiement) > 0 ? 'table-warning'
+                : "table-success"
+              : contribuable.statut === "nouveau" &&  parseInt(contribuable.paiement) === 0 
               ? 'table-danger'
-              : contribuable.statut === "nouveau" &&   75000 - parseInt(contribuable.paiement) <= 35000 && 75000 - parseInt(contribuable.paiement) > 5000
+              : contribuable.statut === "nouveau" &&  75000 - parseInt(contribuable.paiement) > 0
               ? 'table-warning'
-              : contribuable.statut === "nouveau" &&   75000 - parseInt(contribuable.paiement)  <= 5000 ? "table-success"
-              : '';
+              : contribuable.statut === "nouveau" &&    parseInt(contribuable.paiement) === 75000 ? ""
+              : 'blanc';
         return (
           <>
-            <tr key={contribuable.id}  className={rowClass} onClick={()=>{setShowModal(index)}} style={{ cursor:'pointer', backgroundColor: rowClass === "table-success" ? 'chartreuse' : "inherit" }} >
-              <td>{index+1 }</td>
-              <td>{contribuable.codeClient}</td>
-              <td>{contribuable.raison_sociale}</td>
-              <td>{contribuable.niu}</td>
-              <td>{contribuable.statut}</td>
-              <td>{contribuable.paiement}</td>
-              <td>{contribuable.statut === "ancien" ? 50000 - parseInt(contribuable.paiement) : 70000 - contribuable.paiement}</td>
-              <td>{contribuable.tel}</td>
-              <td>{contribuable.codeunitegestion}</td>
-              <td>{contribuable.localisation}</td>
-              <td>{contribuable.distributeur}</td>
-              <td style={contribuable.cga === "LA VOIX DU BARMAN" ? {backgroundColor:'honeydew'}:{backgroundColor:'tomato'}} >{contribuable.cga}</td>
-              <td>{contribuable.ancienCga}</td>
+            <tr key={contribuable.id}   >
+              <td className={rowClass}  style={{ backgroundColor: rowClass === "table-danger" ? "#e53043" : "table-warning" ? rowClass === "table-warning" ? "rgb(249 234 35 / 88%)" : rowClass === "blanc" ? "#f3fbfb": "#dee2e6":"#dee2e6"}}>{index+1 }</td>
+              <td  className={rowClass} style={{ backgroundColor: rowClass === "table-danger" ? "#e53043" : "table-warning" ? rowClass === "table-warning" ? "rgb(249 234 35 / 88%)" : rowClass === "blanc" ? "#f3fbfb": "#dee2e6":"#dee2e6"}}>{contribuable.codeClient}</td>
+              <td className={rowClass}  style={{ backgroundColor: rowClass === "table-danger" ? "#e53043" : "table-warning" ? rowClass === "table-warning" ? "rgb(249 234 35 / 88%)" : rowClass === "blanc" ? "#f3fbfb": "#dee2e6":"#dee2e6"}}>{contribuable.raison_sociale}</td>
+              <td className={rowClass}  style={{ backgroundColor: rowClass === "table-danger" ? "#e53043" : "table-warning" ? rowClass === "table-warning" ? "rgb(249 234 35 / 88%)" : rowClass === "blanc" ? "#f3fbfb": "#dee2e6":"#dee2e6"}} >{contribuable.niu}</td>
+              <td className={rowClass} style={{ backgroundColor: rowClass === "table-danger" ? "#e53043" : "table-warning" ? rowClass === "table-warning" ? "rgb(249 234 35 / 88%)" : rowClass === "blanc" ? "#f3fbfb": "#dee2e6":"#dee2e6"}}>{contribuable.statut}</td>
+              <td className={rowClass} style={{ backgroundColor: rowClass === "table-danger" ? "#e53043" : "table-warning" ? rowClass === "table-warning" ? "rgb(249 234 35 / 88%)" : rowClass === "blanc" ? "#f3fbfb": "#dee2e6":"#dee2e6"}} > {contribuable.paiement}</td>
+              <td className={rowClass} style={{ backgroundColor: rowClass === "table-danger" ? "#e53043" : "table-warning" ? rowClass === "table-warning" ? "rgb(249 234 35 / 88%)" : rowClass === "blanc" ? "#f3fbfb": "#dee2e6":"#dee2e6"}} >{contribuable.statut === "ancien" ? 50000 - parseInt(contribuable.paiement) : 75000 - contribuable.paiement}</td>
+              <td className={rowClass} style={{ backgroundColor: rowClass === "table-danger" ? "#e53043" : "table-warning" ? rowClass === "table-warning" ? "rgb(249 234 35 / 88%)" : rowClass === "blanc" ? "#f3fbfb": "#dee2e6":"#dee2e6"}} >{contribuable.tel}</td>
+              <td className={rowClass} style={{ backgroundColor: rowClass === "table-danger" ? "#e53043" : "table-warning" ? rowClass === "table-warning" ? "rgb(249 234 35 / 88%)" : rowClass === "blanc" ? "#f3fbfb": "#dee2e6":"#dee2e6"}} >{contribuable.codeunitegestion}</td>
+              <td className={rowClass} style={{ backgroundColor: rowClass === "table-danger" ? "#e53043" : "table-warning" ? rowClass === "table-warning" ? "rgb(249 234 35 / 88%)" : rowClass === "blanc" ? "#f3fbfb": "#dee2e6":"#dee2e6"}}>{contribuable.localisation}</td>
+              <td className={rowClass} style={{ backgroundColor: rowClass === "table-danger" ? "#e53043" : "table-warning" ? rowClass === "table-warning" ? "rgb(249 234 35 / 88%)" : rowClass === "blanc" ? "#f3fbfb": "#dee2e6":"#dee2e6"}}>{contribuable.distributeur}</td>
+              <td className={rowClass} style={contribuable.statut === "ancien" && contribuable.ancienCga === "LA VOIX DU BARMAN" ? {backgroundColor:'#dee2e6'}:{backgroundColor:'rgb(34 182 255)'}} >{contribuable.cga}</td>
+              <td className={rowClass} style={contribuable.statut === "ancien" && contribuable.ancienCga === "LA VOIX DU BARMAN" ? {backgroundColor:'#dee2e6'}:{backgroundColor:'rgb(34 182 255)'}} >{contribuable.ancienCga}</td>
+              <td style= {{ cursor:'pointer'}} onClick={()=>{setShowModal(index)}}>Mofidier</td>
             </tr>
             {userInf && userInf.role === 'administrateur' && (
             <>
@@ -205,7 +188,7 @@ const HomePage = () => {
                   </button>
                 </div>
                 <div className="modal-body row overflow-auto">
-                  {/* Champ de fichier XLS */}
+               
                   {<UpdateForm data={contribuable} />}
                 </div>
               </div>
@@ -215,7 +198,7 @@ const HomePage = () => {
           </>
           )})}
         </tbody>
-      </table>
+      </table> */}
     </div>
   );
 };
