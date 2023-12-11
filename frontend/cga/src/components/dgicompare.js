@@ -91,6 +91,7 @@ const DgiCompare = () => {
         console.log(res.data)
         setMessage(res.data.message);
         setLoading(false);
+        setUploadProgress(-1)
         setContribuables(res.data.contribuables);
         const id = setTimeout(() => {
           setMessage('');

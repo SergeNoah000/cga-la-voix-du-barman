@@ -1,36 +1,18 @@
-# syntax=docker/dockerfile:1
+# Utilisation de l'image Node.js officielle en tant qu'image de base
+FROM node:20
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/engine/reference/builder/
+# Définition du répertoire de travail dans le conteneur pour votre application
+WORKDIR /usr/src/app
 
-ARG NODE_VERSION=20.5.1
-
-FROM node:${NODE_VERSION}-alpine
-
-# Use production node environment by default.
-ENV NODE_ENV production
-
-
-WORKDIR /app
-
-# Download dependencies as a separate step to take advantage of Docker's caching.
-# Leverage a cache mount to /root/.npm to speed up subsequent builds.
-# Leverage a bind mounts to package.json and package-lock.json to avoid having to copy them into
-# into this layer.
-RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=package-lock.json,target=package-lock.json \
-    --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev
-
-# Run the application as a non-root user.
-
-# Copy the rest of the source files into the image.
+# Copie de tous les fichiers de votre application dans le conteneur
 COPY . .
 
+# Installation des dépendances pour votre application
 RUN npm install
-# Expose the port that the application listens on.
+
+RUN node dabase.js
+# Exposer le port sur lequel le serveur Express va écouter (vous pouvez changer cela selon le port utilisé par votre serveur)
 EXPOSE 8080
 
-# Run the application.
-CMD npm start
+# Commande pour démarrer votre serveur Express
+CMD ["node", "server.js"]
