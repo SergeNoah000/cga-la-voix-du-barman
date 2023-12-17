@@ -143,8 +143,8 @@ const ValidateContrib = () => {
                 </svg>
                 </span>
                 <span  title='Valider' className="btn btn-outline-success ml-2" onClick={()=>{
-                  console.log( {id:contribuable.id, valide: true})
-                    axios.post(`http://${domainName}:8080/api/contrib/validate`, {id:contribuable.id, valide: true})
+                  console.log( {niu:contribuable.niu, valide: true})
+                    axios.post(`http://${domainName}:8080/api/contrib/validate`, {niu:contribuable.niu, valide: true})
                     .then((res)=>{
                         setMessage(res.message);
                       console.log(res)

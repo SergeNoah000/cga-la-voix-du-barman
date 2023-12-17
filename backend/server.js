@@ -183,13 +183,14 @@ app.post('/api/search', async (req, res) => {
 app.post('/api/contrib/validate', async (req, res) => {
   try {
     // Extraire les paramètres de recherche du corps de la requête
-    const { id, valide } = req.body;
+    const { niu, valide } = req.body;
+    console.log(req.body)
     // Mettre à jour le client dans la base de données
     const updateResult = await database('contribuables')
-      .where("id", id )
+      .where("niu", niu )
       .update({validate: valide, traite: true})
       .orderBy('id', 'desc');
-    if (updateResult.length === 0) {
+    if (!updateResult) {
       return res.status(204).json({ message: 'Client non trouvé.', req: req.body });
     }
 
