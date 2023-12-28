@@ -10,6 +10,7 @@ import DgiCompare from './dgicompare';
 import CryptoJS from 'crypto-js';
 import ENCRYPTION_KEY from './../key'
 import { useNavigate } from 'react-router-dom';
+import RenewForm from './renew-contribs';
 
 const MultipleNavTables = () => {
   const [activeTab, setActiveTab] = useState('1');
@@ -60,8 +61,8 @@ const MultipleNavTables = () => {
          <div className="container-fluid">
           <div className="row">
             <div className="col">
-              <h5 className="text-center mt-5 ">
-                CENTRE DE GESTION AGREE <span style={{color:"blue",fontWeight: 'bold', }}>LA VOIX DU BARMAN</span> Agrément n° 00000596/MINFI/DGI/LRI/CSR du 23 nov 2022.
+              <h5 className="text-center mt-5 " style={{fontSize:"xx-large "}}>
+                CENTRE DE GESTION AGREE <span style={{color:"blue",fontWeight: 'bold', }}>LA VOIX DU BARMAN</span> Agrément  <br/>N° 00000596/MINFI/DGI/LRI/CSR du 23 nov 2022.
               </h5>
             </div>
           </div>
@@ -138,13 +139,13 @@ const MultipleNavTables = () => {
                     >
                     Archives
                     </NavLink>
-                    {/*<NavLink
+                    {/* <NavLink
                       style={tableLinkStyle}
                       className={{ active: activeTab === '8' }}
                       onClick={() => toggle('8')}
                     >
-                      ajout utilisateur
-                    </NavLink>*/}
+                      Mettre à jour 
+                    </NavLink> */}
                   </NavItem>
                 </>
               )}
@@ -173,7 +174,7 @@ const MultipleNavTables = () => {
               </TabPane>
 
               <TabPane tabId="8">
-              <Register />
+              <RenewForm />
               </TabPane>
             </TabContent>
           </Col>

@@ -204,6 +204,26 @@ app.post('/api/contrib/validate', async (req, res) => {
 
 
 
+// Route pour la valider/invalider
+app.get('/api/contribs/renew', async (req, res) => {
+  try {
+    // Mettre à jour le client dans la base de données
+    const updateResult = await database('contribuables')
+      .update({paiement: 0})
+    if (!updateResult) {
+      return res.status(204).json({ message: 'Erreur', req: req.body });
+    }
+
+    res.json({ message: 'Mis à jour avec succès.', updateResult: updateResult });
+
+  } catch (error) {
+    console.error('Erreur lors de la mise a jour totale :', error.message);
+    res.status(500).json({ error: 'Erreur interne du serveur lors de la mise à jour toatale' });
+  }
+});
+
+
+
 app.get('/api/contribuables/all', async (req, res) => {
   try {
     const contribuables = await database.select().from('contribuables').where("validate", true).orderBy('id', 'desc');

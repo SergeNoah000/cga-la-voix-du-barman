@@ -7,6 +7,7 @@ import CryptoJS from 'crypto-js';
 import ENCRYPTION_KEY from './../key'
 import UserRegister from './user-register';
 import MultipleNavTables from './test';
+import RenewForm from './renew-contribs';
 
 const HomePage = () => {
   const [searchName, setSearchName] = useState('');
@@ -107,11 +108,13 @@ const HomePage = () => {
   <div className="container mt-5">
  
     <MultipleNavTables/>
-            {userInf && userInf.role === 'administrateur' && ( <UserRegister />)} <br/>
+            {userInf && userInf.role === 'administrateur' && (<> <RenewForm /> <UserRegister /></>)} <br/>
+           
   <button className="btn btn-warning me-2" onClick={(e)=>{
     sessionStorage.removeItem('userInfo');
     navigateTo('/login');
   }}>Deconnexion</button> 
+  
   <div className="container-fluid">
       <div className="row">
         <div className="col">
