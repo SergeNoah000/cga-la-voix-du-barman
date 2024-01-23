@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import UpdateForm from './contrib-update';
+import DeleteForm from './contrib-delete';
 import CryptoJS from 'crypto-js';
 import ENCRYPTION_KEY from './../key';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +11,7 @@ const ListContrib = () => {
   const [contribuables, setContribuables] = useState([]);
   const [messagerr, setMessagerr] = useState('');
   const [showModal, setShowModal] = useState(-1);
+  const [showModal2, setShowModal2] = useState(-1);
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userInf, setUserInf] = useState([]);
@@ -35,16 +37,34 @@ const ListContrib = () => {
       console.error(err);
     }
   }
-
   const fetchContribuables = async () => {
     try {
-      
-      const response = await axios.get(`http://${domainName}:8080/api/contribuables/all`);
-      setDone(true)
+      const formData = new FormData();
+      formData.append("api/contribuables/all", "something");
+      /* ${domainName}:8080/api/contribuables/all */
+      const response = await axios.post(`https://cga.legionweb.co/cga-server.php`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+  
+      setDone(true);
       setContribuables(response.data);
+  
+      // Stocker les données récupérées en localstorage
+      localStorage.setItem('contribuablesData', JSON.stringify(response.data));
     } catch (error) {
-      console.error('Erreur lors du chargement des contribuables :', error.message);
-      setMessagerr('Erreur lors du chargement des contribuables.');
+      if (error?.message === "Network Error") {
+        // Récupérer les données stockées en localstorage en cas d'erreur de connexion
+        const storedData = JSON.parse(localStorage.getItem('contribuablesData'));
+        if (storedData) {
+          setContribuables(storedData);
+          setMessagerr('Données en local non synchronisées');
+        }
+      } else {
+        console.error('Erreur lors du chargement des contribuables :', error);
+        setMessagerr(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -59,6 +79,10 @@ const ListContrib = () => {
     if (userInf.length === 0) {
       getUserInfos();
     }
+
+    return ()=>{
+      setContribuables([]);
+    }
   }, []);
 
   return (
@@ -70,7 +94,7 @@ const ListContrib = () => {
       >
         {loading ? (
           <>
-            <Spinner
+            chargement en cours <Spinner
               as="span"
               animation="border"
               size="sm"
@@ -140,26 +164,55 @@ const ListContrib = () => {
               <td className={rowClass} style={{ backgroundColor: rowClass === "table-danger" ? "#e53043" : "table-warning" ? rowClass === "table-warning" ? "rgb(249 234 35 / 88%)" : rowClass === "blanc" ? "#f3fbfb":/* blanc */ "#dee2e6":"#dee2e6"}}>{contribuable.distributeur}</td>
               <td className={rowClass} style={contribuable.statut === "ancien" && contribuable.ancienCga === "LA VOIX DU BARMAN" ? {backgroundColor:'#dee2e6'}:{backgroundColor:'rgb(34 182 255)'}} >{contribuable.cga}</td>
               <td className={rowClass} style={contribuable.statut === "ancien" && contribuable.ancienCga === "LA VOIX DU BARMAN" ? {backgroundColor:'#dee2e6'}:{backgroundColor:'rgb(34 182 255)'}} >{contribuable.ancienCga}</td>
-              <td style= {{ cursor:'pointer'}} onClick={()=>{setShowModal(index)}}>Mofidier</td>
-            </tr>
-            {userInf && userInf.role === 'administrateur' && (
-            <>
-            <div className={`modal`} tabIndex="-1" role="dialog" style={{display:showModal === index ? "block":"none"}}>
-            <div className="modal-dialog" role="document">
-              <div className="modal-content container mt-0" style={ {wdth:`${largeurEcran-35}px`}}>
-                <div className="modal-header">
-                  <h5 className="modal-title">Mettez à jour</h5>
-                  <button type="button" className="close" onClick={() => setShowModal(-1)} aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div className="modal-body row overflow-auto">
-                  {/* Champ de fichier XLS */}
-                  {<UpdateForm data={contribuable} />}
-                </div>
-              </div>
-            </div>
-          </div>
+              <td style= {{ cursor:'pointer'}} /*  */>
+                                                                              <div class="btn-group dropleft">
+                                                                                <button type="button" class="btn  dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                                  Options
+                                                                                </button>
+                                                                                <div class="dropdown-menu">
+                                                                                  <span onClick={()=>{setShowModal(index); setShowModal2(-1)}} class="dropdown-item " href="#">Editer</span>
+                                                                                  <span onClick={()=>{setShowModal2(index); setShowModal(-1)}} class="dropdown-item text-danger" href="#">Supprimer</span>
+                                                                                </div>
+                                                                              </div>
+                                                                              </td>
+                                  </tr>
+                                  {userInf && userInf.role === 'administrateur' && (
+                                  <>
+                                  <div className={`modal`} tabIndex="-1" role="dialog" style={{display:showModal === index ? "block":"none"}}>
+                                  <div className="modal-dialog" role="document">
+                                    <div className="modal-content container mt-0" style={ {wdth:`${largeurEcran-35}px`}}>
+                                      <div className="modal-header">
+                                        <h5 className="modal-title">Mettez à jour</h5>
+                                        <button type="button" className="close" onClick={() => setShowModal(-1)} aria-label="Close">
+                                          <span aria-hidden="true">&times;</span>
+                                        </button>
+                                      </div>
+                                      <div className="modal-body row overflow-auto">
+                                        {/* Champ de fichier XLS */}
+                                        {<UpdateForm data={contribuable} />}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className={`modal`} tabIndex="-1" role="dialog" style={{display:showModal2 === index ? "block":"none"}}>
+                                  <div className="modal-dialog" role="document">
+                                    <div className="modal-content container mt-0" style={ {wdth:`${largeurEcran-35}px`}}>
+                                      <div className="modal-header">
+                                        <h5 className="modal-title">Confirmer la suppression</h5>
+                                        <button type="button" className="close" onClick={() => setShowModal2(-1)} aria-label="Close">
+                                          <span aria-hidden="true">&times;</span>
+                                        </button>
+                                      </div>
+                                      <div className="modal-body row overflow-auto">
+                                        {/* Champ de fichier XLS */}
+                                        {<DeleteForm data={contribuable} />}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+
           </>)}
           </>
           )})}

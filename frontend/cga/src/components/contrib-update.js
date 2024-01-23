@@ -1,186 +1,4 @@
-/* import React, { useState } from 'react';
-import axios from 'axios';
 
-
-const UpdateForm = (data) => {
-  const [formData, setFormData] = useState(data.data);
-  const [message, setMessage] = useState(''); 
-  const [messagerr, setMessager] = useState(''); 
-
-  const url = new URL(window.location.href);
-  const domainName = url.hostname.replace(/^www\./, '');
-
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-        // Envoi des données du formulaire à la route avec Axios
-        formData['created_at'] = new Date(formData['created_at']).toISOString().slice(0, 19).replace('T', ' ');
-        formData['updated_at'] = null;
-         await axios.put(`http://${domainName}:8080/api/contrib-update/${formData.codeClient}`, formData)
-         .then((res)=>{
-            console.log(res.data);
-            setMessage(res.data.message);
-         })
-         .catch((err)=>{
-            console.log(err);
-            setMessager(err.message);
-         })
-  
-        // Vous pouvez également rediriger l'utilisateur ou effectuer d'autres actions après la soumission réussie
-      } catch (error) {
-        // Gestion des erreurs (affichage, journalisation, etc.)
-        console.error('Erreur lors de la soumission du formulaire :', error.message);
-      }
-    console.log('Formulaire soumis ');
-  };
-
-  return (
-    <div className="container mt-2">
-      <form onSubmit={handleSubmit}>
-        <div className="row">
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label className="form-label">Code Client</label>
-              <input
-                type="text"
-                className="form-control"
-                name="codeClient"
-                value={formData.codeClient}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Noms et Prénoms</label>
-              <input
-                type="text"
-                className="form-control"
-                name="nomPrenoms"
-                value={formData.nomPrenoms}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">NIU</label>
-              <input
-                type="text"
-                className="form-control"
-                name="niu"
-                value={formData.niu}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Paiement Effectué pour l'Inscription</label>
-              <input
-                type="number"
-                className="form-control"
-                name="paiementInscription"
-                value={formData.paiementInscription}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Paiement Effectué pour la Cotisation</label>
-              <input
-                type="number"
-                className="form-control"
-                name="paiementCotisation"
-                value={formData.paiementCotisation}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label className="form-label">Reste à Payer pour l'Inscription</label>
-              <input
-                type="number"
-                className="form-control"
-                name="restePayerInscription"
-                value={formData.restePayerInscription}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Reste à Payer pour la Cotisation</label>
-              <input
-                type="number"
-                className="form-control"
-                name="restePayerCotisation"
-                value={formData.restePayerCotisation}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Numéro de Téléphone</label>
-              <input
-                type="tel"
-                className="form-control"
-                name="numeroTel"
-                value={formData.numeroTel}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">CDI</label>
-              <input
-                type="text"
-                className="form-control"
-                name="cdi"
-                value={formData.cdi}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Localisation</label>
-              <input
-                type="text"
-                className="form-control"
-                name="localisation"
-                value={formData.localisation}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Distributeur</label>
-              <input
-                type="text"
-                className="form-control"
-                name="distributeur"
-                value={formData.distributeur}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">CGA Actuel</label>
-              <input
-                type="text"
-                className="form-control"
-                name="cgaActuel"
-                value={formData.cgaActuel}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-          {message && (<><h4 style={{color:'green'}}>{message}</h4></>)}
-          {messagerr && (<><h4 style={{color:'red'}}>{messagerr}</h4></>)}
-        </div>
-        <button type="submit" className="btn btn-primary">Enregistrer</button>
-      </form>
-    </div>
-  );
-};
-
-export default UpdateForm;
- */
 import React, { useState, useEffect } from 'react';
 import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
@@ -209,62 +27,109 @@ const UpdateForm = (data) => {
   const url = new URL(window.location.href);
   const domainName = url.hostname.replace(/^www\./, '');
   const navagateTo = useNavigate()
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const formData = {
-        id: data.data.id,
-        raison_sociale: raisonSociale,
-        siglecga: sigleCga,
-        activite_principale: activitePrincipale,
-        niu,
-        tel,
-        email,
-        coderegime: codeRegime,
-        sigle,
-        cga,
-        unite_gestion: uniteGestion,
-        statut,
-        distributeur,
-        ancienCga,
-        paiement:paiementInscription,
-        codeClient,
-        creation_date: new Date(data.data.creation_date).toISOString().slice(0, 19).replace('T', ' '),
-        update_date: null,
-      };
-
-      await axios.put(`http://${domainName}:8080/api/contrib-update/${formData.id}`, formData)
-        .then((res) => {
-          setMessage(res.data.message);
+      const formData = new FormData();
+  
+      formData.append('id', data.data.id);
+      formData.append('raison_sociale', raisonSociale);
+      formData.append('siglecga', sigleCga);
+      formData.append('activite_principale', activitePrincipale);
+      formData.append('niu', niu);
+      formData.append('tel', tel);
+      formData.append('email', email);
+      formData.append('coderegime', codeRegime);
+      formData.append('sigle', sigle);
+      formData.append('cga', cga);
+      formData.append('unite_gestion', uniteGestion);
+      formData.append('statut', statut);
+      formData.append('distributeur', distributeur);
+      formData.append('ancienCga', ancienCga);
+      formData.append('paiement', paiementInscription);
+      formData.append('codeClient', codeClient);
+      formData.append('creation_date', new Date(data.data.creation_date).toISOString().slice(0, 19).replace('T', ' '));
+      formData.append('update_date', null);
+      formData.append("api/contrib-update", "something");
+  
+      await axios.post(`https://cga-legionweb.cocga-server.php`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      .then((res) => {
+        setMessage(res.data.message);
+        const id = setTimeout(() => {
+          setMessager('');
+          navagateTo('/');
+        }, 4000);
+  
+        const cancel = () => {
+          clearTimeout(id);
+        };
+  
+        setTimeout(cancel, 5000);
+      })
+      .catch((error) => {
+        console.log(error);
+        if (error.message && error.message === "Network Error") {
+          const data1 = [{
+            id: data.data.id,
+            raison_sociale: raisonSociale,
+            siglecga: sigleCga,
+            activite_principale: activitePrincipale,
+            niu, tel, email,
+            coderegime: codeRegime,
+            sigle,
+            cga, unite_gestion: uniteGestion,
+            statut, distributeur,
+            ancienCga,
+            paiement: paiementInscription,
+            codeClient,
+            creation_date: new Date(data.data.creation_date).toISOString().slice(0, 19).replace('T', ' '),
+            update_date: null,
+          }];
+  
+          const after =  JSON.parse(localStorage.getItem('updateFormData'));
+          if (after) {
+            after.push(...data1);
+            localStorage.setItem('updateFormData', JSON.stringify(after));
+          } else {
+            localStorage.setItem('updateFormData', JSON.stringify(data1));
+          }
+  
+          setMessager('');
+          setMessage("Stocké en local en attente d'une connexion internet.");
+          
+  
           const id = setTimeout(() => {
-            setMessager('');
-            navagateTo('/')
+            setMessage('');
+          navagateTo('/');
           }, 4000);
-
+  
           const cancel = () => {
             clearTimeout(id);
           };
-
+  
           setTimeout(cancel, 5000);
-        })
-        .catch((err) => {
-          console.log(err);
-          setMessager(err.message);
+        } else {
+          setMessager(error.message);
           const id = setTimeout(() => {
             setMessager('');
           }, 4000);
-
+  
           const cancel = () => {
             clearTimeout(id);
           };
-
+  
           setTimeout(cancel, 5000);
-        });
+        }
+      });
     } catch (error) {
       console.error('Erreur lors de la soumission du formulaire :', error.message);
     }
   };
-
 
   return (
     <div className="container">

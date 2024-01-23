@@ -8,7 +8,6 @@ const RegistrationForm = () => {
   const [codeClient, setCodeClient] = useState('');
   const [nomPrenoms, setNomPrenoms] = useState('');
   const [niu, setNiu] = useState('');
-  const [statut, setStatut] = useState('');
   const [paiement, setPaiement] = useState('');
   const [numeroTel, setNumeroTel] = useState('');
   const [cdi, setCdi] = useState('');
@@ -18,6 +17,7 @@ const RegistrationForm = () => {
   const [cgaActuel, setCgaActuel] = useState('');
   const [ancienCga, setAncienCga] = useState('');
   const [reste, setReste] = useState(0);
+  const [statut, setStatut] = useState('');
   const [message, setMessage] = useState('');
   const [messagerr, setMessager] = useState('');
 
@@ -48,79 +48,136 @@ const RegistrationForm = () => {
 
 
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      setCgaActuel("LA VOIX DU BARMAN");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    setCgaActuel("LA VOIX DU BARMAN");
 
-      const data = {
-        codeClient : codeClient,
-        raison_sociale : nomPrenoms,
-        niu : niu,
-        statut : statut,
-        paiement : paiement,
-        tel : numeroTel,
-        codeunitegestion : cdi,
-        localisation : localisation,
-        distributeur: distributeur,
-        cga : cgaActuel.trim() === ''?"LA VOIX DU BARMAN": cgaActuel,
-        ancienCga: ancienCga,
-        userId:userInf.id,
+    const formData = new FormData();
+
+    formData.append('codeClient', codeClient);
+    formData.append('raison_sociale', nomPrenoms);
+    formData.append('niu', niu);
+    formData.append('statut', statut);
+    formData.append('paiement', paiement);
+    formData.append('tel', numeroTel);
+    formData.append('codeunitegestion', cdi);
+    formData.append('localisation', localisation);
+    formData.append('distributeur', distributeur);
+    formData.append('cga', cgaActuel.trim() === '' ? 'LA VOIX DU BARMAN' : cgaActuel);
+    formData.append('ancienCga', ancienCga);
+    formData.append('userId', userInf.id);
+    formData.append("api/contrib-register", "something");
+
+    // Envoi des données du formulaire à la route avec Axios ${domainName}:8080/api/contrib-register
+    await axios.post(`https://cga-legionweb.cocga-server.php`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
       }
+    })
+    .then((res) => {
+      setMessage(res.data.msg);
+      const id = setTimeout(() => {
+        setMessager('');
+        setAncienCga('');
+        setCdi('');
+        setCgaActuel('');
+        setCodeClient('');
+        setDistributeur('');
+        setLocalisation('');
+        setMessage('');
+        setNiu('');
+        setNomPrenoms('');
+        setNumeroTel("");
+        setReste(0);
+        setPaiement('');
+        setStatut('');
 
-      // Envoi des données du formulaire à la route avec Axios
-      await axios.post(`http://${domainName}:8080/api/contrib-register`, data)
-        .then((res) => {
-          setMessage(res.data.msg);
+      }, 4000);
+
+      // Définir une fonction de rappel pour annuler la temporisation
+      const cancel = () => {
+        clearTimeout(id);
+      };
+
+      // Annuler la temporisation après 5 secondes
+      setTimeout(cancel, 5000);
+    })
+    .catch((error) => {
+      console.log(error);
+      if (error.message && error.message === "Network Error") {
+        const data = [{
+          codeClient : codeClient,
+          raison_sociale : nomPrenoms,
+          niu : niu,
+          statut : statut,
+          paiement : paiement,
+          tel : numeroTel,
+          codeunitegestion : cdi,
+          localisation : localisation,
+          distributeur: distributeur,
+          cga : cgaActuel.trim() === ''?"LA VOIX DU BARMAN": cgaActuel,
+          ancienCga: ancienCga,
+          userId:userInf.id,
+        },];
+  
+          // Stoker les données du formulaire dans le localStorage
+          const after =  JSON.parse(localStorage.getItem('formData'));
+          if(after){
+            after.push(...data);
+          localStorage.setItem('formData', JSON.stringify(after));
+        }else{
+          localStorage.setItem('formData', JSON.stringify(data));
+        }
+          setMessager('');
+          setAncienCga('');
+          setCdi('');
+          setCgaActuel('');
+          setCodeClient('');
+          setDistributeur('');
+          setLocalisation('');
+          setMessage('');
+          setNiu('');
+          setNomPrenoms('');
+          setNumeroTel("");
+          setReste(0);
+          setPaiement('');
+          setStatut('');
+  
+          setMessage(" Stocker en local en attente d'une connexion internet. ");
           const id = setTimeout(() => {
-            setMessager('');
-            setAncienCga('');
-            setCdi('');
-            setCgaActuel('');
-            setCodeClient('');
-            setDistributeur('');
-            setLocalisation('');
             setMessage('');
-            setNiu('');
-            setNomPrenoms('');
-            setNumeroTel("");
-            setReste(0);
-            setPaiement('');
-            setStatut('');
-
           }, 4000);
-        
+  
           // Définir une fonction de rappel pour annuler la temporisation
           const cancel = () => {
             clearTimeout(id);
           };
-        
+  
           // Annuler la temporisation après 5 secondes
           setTimeout(cancel, 5000);
-        })
-        .catch((err) => {
-          console.log(err);
-          setMessager(err.message);
-          const id = setTimeout(() => {
-            setMessager('');
-          }, 4000);
-        
-          // Définir une fonction de rappel pour annuler la temporisation
-          const cancel = () => {
-            clearTimeout(id);
-          };
-        
-          // Annuler la temporisation après 5 secondes
-          setTimeout(cancel, 5000);
-        });
+      }else{
+      setMessager(error.message);
+      const id = setTimeout(() => {
+        setMessager('');
+      }, 4000);
 
-      // Vous pouvez également rediriger l'utilisateur ou effectuer d'autres actions après la soumission réussie
-    } catch (error) {
-      // Gestion des erreurs (affichage, journalisation, etc.)
-      console.error('Erreur lors de la soumission du formulaire :', error.message);
-    }
-    console.log('Formulaire soumis.\n');
-  };
+      // Définir une fonction de rappel pour annuler la temporisation
+      const cancel = () => {
+        clearTimeout(id);
+      };
+
+      // Annuler la temporisation après 5 secondes
+      setTimeout(cancel, 5000);
+    }});
+  }
+  catch (error) {
+    // Gestion des erreurs (affichage, journalisation, etc.)
+    console.error('Erreur lors de la soumission du formulaire :', error.message);
+  }
+};
+
+
 
   useEffect(() => {
     if (userInf.length === 0) {
@@ -147,23 +204,30 @@ const RegistrationForm = () => {
               <label className="form-label">Noms et Prénoms</label>
               <input
                 type="text"
-                className="form-control"
+                className={ nomPrenoms.length> 0 ? "form-control is-valid":"form-control"}
                 name="nomPrenoms"
-                value={nomPrenoms}
-                onChange={(e) => setNomPrenoms(e.target.value)}
+                onBlur={(e) => setNomPrenoms(e.target.value)}
                 required
               />
+              <div class="valid-feedback">
+              
             </div>
-            <div className="mb-3">
+            </div>
+            <div className="mb-3 ">
               <label className="form-label">NIU</label>
               <input
                 type="text"
-                className="form-control"
+                className={niu.length> 0 && niu.length !== 14 ? "form-control is-invalid" : niu.length === 14 ? "form-control is-valid": "form-control"}
                 name="niu"
-                value={niu}
-                onChange={(e) => setNiu(e.target.value)}
-                required
+                onBlur={(e) => setNiu(e.target.value)}
+                
               />
+              <div class="invalid-feedback">
+              Le nui doit compter 14 caractère
+            </div>
+            <div class="valid-feedback">
+            </div>
+
             </div>
             <div className="mb-3">
               <label className="form-label">Statut</label>
@@ -197,7 +261,8 @@ const RegistrationForm = () => {
                   } else {
                     setReste(75000 - e.target.value);
                   }
-                }}
+                }} 
+                required
               />
             </div>
           </div>

@@ -39,9 +39,12 @@ const ValidateContrib = () => {
 
   const fetchContribuables = async () => {
     try {
-      
-      const response = await axios.get(`http://${domainName}:8080/api/contribuables/validate`);
-      setDone(true)
+      setLoading(true); //${domainName}:8080/
+      const formulaire = new FormData();
+      formulaire.append("api/contribuables/validate", "something");
+      const response = await axios.post(`https://cga.legionweb.co/cga-server.php`, formulaire, {headers:{"Content-Type":"multipart/form-data"}});
+      setDone(true);
+      setLoading(false);  
       setContribuables(response.data);
     } catch (error) {
       console.error('Erreur lors du chargement des contribuables :', error.message);
@@ -68,6 +71,7 @@ const ValidateContrib = () => {
         variant="primary"
         onClick={handleClick}
         style={{display: !done?"-moz-initial":"none"}}
+        disabled={loading}
       >
         {loading ? (
           <>
@@ -77,7 +81,7 @@ const ValidateContrib = () => {
               size="sm"
               role="status"
               aria-hidden="true"
-            />
+            /> Cliquez pour Charger 
             <span className="visually-hidden">Chargement...</span>
           </>
         ) : (

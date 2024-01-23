@@ -11,30 +11,7 @@ const UserRegister = () => {
     setFile(e.target.files[0]);
   };
 
-  const handleUpload = async () => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
 
-      await axios.post('http://localhost:8080/mise-a-jour-en-ligne', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }).then((res)=>{
-        setMessage(res.data.message);
-        setFile(null)
-      })
-      .catch((err)=>{
-        console.log(err);
-      })
-
-      // Ajoutez ici la logique pour actualiser la liste après la mise à jour
-
-      setShowModal(false); // Fermez le modal après la mise à jour
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi du fichier :', error);
-    }
-  };
 
   return (
     <div>
@@ -43,7 +20,7 @@ const UserRegister = () => {
 
 
       {/* Modal */}
-      <div className={`modal`} tabIndex="-1" role="dialog" style={{display:showModal? "block":"none"}}>
+      <div className="modal fade" id="userRegister" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div className="modal-dialog" role="document">
           <div className="modal-content container mt-5" style={{position:'absolute', width:'350px'}}>
             <div className="modal-header">

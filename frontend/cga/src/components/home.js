@@ -8,10 +8,10 @@ import ENCRYPTION_KEY from './../key'
 import UserRegister from './user-register';
 import MultipleNavTables from './test';
 import RenewForm from './renew-contribs';
+import UpdateForm from './contrib-update';
 
 const HomePage = () => {
   const [searchName, setSearchName] = useState('');
-  const [messagerr, setMessageerr] = useState('');
   const [contribuables, setContribuables] = useState([]);
   const [nouvelles, setNouvelles] = useState([]);
   const [userInf, setUserInf] = useState([]);
@@ -19,6 +19,11 @@ const HomePage = () => {
   const [showModal, setShowModal] = useState(-1);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [statut, setStatut] = useState('');
+  const [message, setMessage] = useState('');
+  const [messagerr, setMessager] = useState('');
+
+
   const navigateTo = useNavigate();
   const url = new URL(window.location.href);
   const domainName = url.hostname.replace(/^www\./, '');
@@ -53,6 +58,7 @@ const HomePage = () => {
   function getUserInfos(){
     try {
         const encryptedData = sessionStorage.getItem('userInfo');
+        const encryptedData1 = sessionStorage.getItem('userInfo');
         if (encryptedData) {
             const decryptedData = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY.ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8);
             if (decryptedData) {
@@ -62,14 +68,18 @@ const HomePage = () => {
             }
         }else{
             navigateTo('/login');
-        }}catch(err){
+        }
+      }catch(err){
             
     }
 }
   const fetchContribuables = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get(`http://${domainName}:8080/api/contribuables?page=${currentPage}`);
+      setLoading(true);//${domainName}:8080/
+      const formulaire = new FormData();
+      formulaire.append("api/contribuables", "something");
+      formulaire.append("page" , currentPage);
+      const response = await axios.post(`https://cga.legionweb.co/cga-server.php`, formulaire, {headres:{"Content-Type":"multipart/form-data"}});
       setContribuables((prevContribuables) => [...prevContribuables, ...response.data]);
       setCurrentPage(currentPage + 1);
       setLoading(false);
@@ -85,12 +95,251 @@ const HomePage = () => {
     const scrollTop = window.scrollY;
 
     if (scrollTop + windowHeight >= documentHeight - 400 && !loading) {
-      fetchContribuables();
+     // fetchContribuables();
     }
   };
 
 
+  const synchronization=()=>{
+    const formRegister = async () => {
+      try {
+          // Recuperer les données du formulaire dans le localStorage
+          const after =  JSON.parse(localStorage.getItem('formData'));
+          if(after){
+            after.map(async(contrib, index)=>{
+              const formData = new FormData();
+        
+              formData.append('codeClient', contrib.codeClient);
+              formData.append('raison_sociale', contrib.nomPrenoms);
+              formData.append('niu', contrib.niu);
+              formData.append('statut', contrib.statut);
+              formData.append('paiement', contrib.paiement);
+              formData.append('tel', contrib.tel);
+              formData.append('codeunitegestion', contrib.cdi);
+              formData.append('localisation', contrib.localisation);
+              formData.append('distributeur', contrib.distributeur);
+              formData.append('cga', contrib.cga);
+              formData.append('ancienCga', contrib.ancienCga);
+              formData.append('userId', contrib.userId);
+              formData.append("api/contrib-register", "something");
+
+              await axios.post(`https://cga-legionweb.cocga-server.php`, formData, {
+                  headers: {
+                    'Content-Type': 'multipart/form-data'
+                  }
+                })
+                .then((res) => {
+                  setMessage(res.data.msg + index + 1);
+                  const id = setTimeout(() => {
+                    setMessage('');
+                  }, 4000);
+                  const cancel = () => {
+                    clearTimeout(id);
+                  };
+                  setTimeout(cancel, 3000);
+                })
+                .catch((error)=>{
+                  console.log(error);
+                })
+            })
+          localStorage.removeItem('formData');
+        }
+      }
+      catch (error) {
+        // Gestion des erreurs (affichage, journalisation, etc.)
+        console.error('Erreur lors de la soumission du formulaire :', error.message);
+      }
+    };
+
+    const formUpdate = async () => {
+      try {
+          const after =  JSON.parse(localStorage.getItem('updateFormData'));
+          if (after) {
+            after.map(async(contrib, index)=>{
+              const formData = new FormData();
+  
+            formData.append('id',contrib.id);
+            formData.append('raison_sociale', contrib.raison_sociale);
+            formData.append('siglecga', contrib.siglecga);
+            formData.append('activite_principale', contrib.activite_principale);
+            formData.append('niu', contrib.niu);
+            formData.append('tel', contrib.tel);
+            formData.append('email', contrib.email);
+            formData.append('coderegime', contrib.coderegime);
+            formData.append('sigle', contrib.sigle);
+            formData.append('cga', contrib.cga);
+            formData.append('unite_gestion', contrib.unite_gestion);
+            formData.append('statut', contrib.statut);
+            formData.append('distributeur', contrib.distributeur);
+            formData.append('ancienCga', contrib.ancienCga);
+            formData.append('paiement', contrib.paiement);
+            formData.append('codeClient', contrib.codeClient);
+            formData.append('creation_date', contrib.creation_date);
+            formData.append('update_date', null);
+            formData.append("api/contrib-update", "something");
+        
+            await axios.post(`https://cga-legionweb.cocga-server.php`, formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            })
+            .then((res) => {
+              setMessage(res.data.message + index+1);
+              const id = setTimeout(() => {
+                setMessage('');
+              }, 4000);
+              const cancel = () => {
+                clearTimeout(id);
+              };
+              setTimeout(cancel, 5000);
+            })
+            .catch((error) => {
+              console.log(error);})
+            });
+            localStorage.removeItem("updateFormData");
+          } ;
+      } catch (error) {
+        console.error('Erreur lors de la soumission du formulaire de mise à jour d\'un contribuable :', error.message);
+      }
+    };
+
+    const formDelete = async () => {
+      try {
+
+          const after =  JSON.parse(localStorage.getItem('deleteFormData'));
+          if (after) {
+            after.map( async (contrib, index)=>{
+              const formData = new FormData();
+          
+              formData.append('id',contrib.id);
+              formData.append("api/contrib-delete", "something");
+              await axios.post(`https://cga.legionweb.co/cga-server.php`, formData, {
+                headers: {
+                  'Content-Type': 'multipart/form-data'
+                }
+              })
+              .then((res) => {
+                setMessage(res.data.message + index+ 1);
+                const id = setTimeout(() => {
+                  setMessage('');
+                }, 4000);
+                const cancel = () => {
+                  clearTimeout(id);
+                };
+                setTimeout(cancel, 5000);
+              })
+              .catch((error) => {
+                console.log(error);
+            })
+            });
+
+            localStorage.removeItem("deleteFormData");
+          }
+           
+      } catch (error) {
+        console.error('Erreur lors de la soumission du formulaire :', error.message);
+      }
+    };
+
+
+  const formUserDelete = async () => {
+    try {
+
+        const after =  JSON.parse(localStorage.getItem('user-delete'));
+        if (after) {
+          after.map( async (contrib, index)=>{
+            const formData = new FormData();
+        
+            formData.append('id',contrib.id);
+            formData.append("api/contrib-delete", "something");
+            await axios.post(`https://cga.legionweb.co/cga-server.php`, formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            })
+            .then((res) => {
+              setMessage(res.data.message + index+ 1);
+              const id = setTimeout(() => {
+                setMessage('');
+              }, 4000);
+              const cancel = () => {
+                clearTimeout(id);
+              };
+              setTimeout(cancel, 5000);
+            })
+            .catch((error) => {
+              console.log(error);
+          })
+          });
+
+          localStorage.removeItem("user-delete")
+        }
+         
+    } catch (error) {
+      console.error('Erreur lors de la soumission du formulaire :', error.message);
+    }
+  };
+
+  const formUserRegister = async () => {
+
+
+    try {
+          // Stoker les données du formulaire dans le localStorage
+          const after =  JSON.parse(localStorage.getItem('user-register'));
+          if(after){
+            after.map( async (user, index)=>{
+              setMessager('');
+            setStatut('');
+            const formulaire = new FormData();
+            formulaire.append("username", user.name);
+            formulaire.append("fullname", user.fullname);
+            formulaire.append("role", user.role);
+            formulaire.append("password", user.password);
+            formulaire.append("api/user-register", "something");
+
+            // Make a request to the server to authenticate the user  ://${domainName}:8080/api/user-register
+            await axios.post(`https://cga.legionweb.co/cga-server.php`, formulaire, {headers:{"Content-Type":"multipart/form-data"}})
+              .then((res) => {
+                setStatut(res.data.msg+index+1);
+              })
+              .catch((error) => {
+                console.log(error);});
+            })
+            localStorage.removeItem("user-register");
+        }
+
+    } catch (error) {
+      // Handle login failure
+      console.error('registration error', error.message);
+    }
+  };
+
+  formRegister();
+  formUpdate();
+  formDelete();
+  formUserRegister();
+  formUserDelete();
+
+
+  setMessage("Synchronisation terminée.")
+  const id = setTimeout(() => {
+    setMessage('');
+  }, 4000);
+
+  const cancel = () => {
+    clearTimeout(id);
+  };
+  setTimeout(cancel, 5000);
+
+};
+
+
     useEffect(() => {
+      //fetchContribuables();
+     /*  if (!loading) {
+        synchronization();
+        setLoading(true);
+      } */
     window.addEventListener('scroll', handleScroll);
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -107,8 +356,10 @@ const HomePage = () => {
   return (
   <div className="container mt-5">
  
-    <MultipleNavTables/>
-            {userInf && userInf.role === 'administrateur' && (<> <RenewForm /> <UserRegister /></>)} <br/>
+ {message && (<h4 style={{ color: 'green' }}>{message}</h4>)}
+          {statut && (<h4 style={{ color: "mediumvioletred" }}>{statut}</h4>)}
+  {messagerr && (<><div style={{color:'red'}}><h3>{messagerr}</h3></div></>)}
+    <MultipleNavTables/><br/>
            
   <button className="btn btn-warning me-2" onClick={(e)=>{
     sessionStorage.removeItem('userInfo');
@@ -126,7 +377,7 @@ const HomePage = () => {
         </div>
       </div>
     </div>
-  {messagerr && (<><div style={{color:'red'}}><h3>{messagerr}</h3></div></>)}
+
       {/* <table className="table  table-bordered mt-4">
         <thead>
           <tr>
