@@ -14,7 +14,7 @@ const RenewForm = () => {
 
   function getUserInfos(){
     try {
-        const encryptedData = sessionStorage.getItem('userInfo');
+        const encryptedData = localStorage.getItem('userInfo');
         if (encryptedData) {
             const decryptedData = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY.ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8);
             if (decryptedData) {

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
+import {Spinner} from 'react-bootstrap';
 
 const UpdateForm = (data) => {
   const [raisonSociale, setRaisonSociale] = useState(data.data.raison_sociale);
@@ -17,12 +18,14 @@ const UpdateForm = (data) => {
   const [uniteGestion, setUniteGestion] = useState(data.data.unite_gestion);
   const [statut, setStatut] = useState(data.data.statut);
   const [distributeur, setDistributeur] = useState(data.data.distributeur);
+  const [localisation, setLocalisation] = useState(data.data.localisation);
   const [ancienCga, setAncienCga] = useState(data.data.ancienCga);
   const [paiementInscription, setPaiementInscription] = useState(data.data.paiement);
   const [codeClient, setCodeClient] = useState(data.data.codeClient);
 
   const [message, setMessage] = useState('');
   const [messagerr, setMessager] = useState('');
+  const [pending, setPending] = useState(false);
 
   const url = new URL(window.location.href);
   const domainName = url.hostname.replace(/^www\./, '');
@@ -41,6 +44,7 @@ const UpdateForm = (data) => {
       formData.append('tel', tel);
       formData.append('email', email);
       formData.append('coderegime', codeRegime);
+      formData.append('localisation', localisation);
       formData.append('sigle', sigle);
       formData.append('cga', cga);
       formData.append('unite_gestion', uniteGestion);
@@ -52,14 +56,15 @@ const UpdateForm = (data) => {
       formData.append('creation_date', new Date(data.data.creation_date).toISOString().slice(0, 19).replace('T', ' '));
       formData.append('update_date', null);
       formData.append("api/contrib-update", "something");
-  
-      await axios.post(`https://cga-legionweb.cocga-server.php`, formData, {
+      setPending(true);
+      await axios.post(`https://cga.legionweb.co/cga-server.php`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       })
       .then((res) => {
         setMessage(res.data.message);
+        setPending(false);
         const id = setTimeout(() => {
           setMessager('');
           navagateTo('/');
@@ -73,6 +78,7 @@ const UpdateForm = (data) => {
       })
       .catch((error) => {
         console.log(error);
+        setPending(false);
         if (error.message && error.message === "Network Error") {
           const data1 = [{
             id: data.data.id,
@@ -135,7 +141,7 @@ const UpdateForm = (data) => {
     <div className="container">
       <form onSubmit={handleSubmit}>
         <div className="row">
-          <div className="col-md-6">
+          <div className="col">
             
 
             <div className="mb-3">
@@ -207,9 +213,18 @@ const UpdateForm = (data) => {
                 onChange={(e) => setCodeRegime(e.target.value)}
               />
             </div>
+             <div className="mb-3">
+              <label className="form-label">Localisation</label>
+              <input
+                type="text"
+                className="form-control"
+                value={localisation}
+                onChange={(e) => setLocalisation(e.target.value)}
+              />
+            </div>
           </div>
 
-          <div className="col-md-6">
+          <div className="col">
             <div className="mb-3">
               <label className="form-label">Sigle CGA</label>
               <input
@@ -296,8 +311,12 @@ const UpdateForm = (data) => {
           {messagerr && (<h4 style={{ color: 'red' }}>{messagerr}</h4>)}
         </div>
 
-        <button type="submit" className="btn btn-primary">
+        <button disabled={pending} type="submit" className="btn btn-primary">
+         {pending && <Spinner as="span" className="mr-2" animation="border" size="sm" role="status" aria-hidden="true" />}
           Enregistrer
+        </button>
+         <button type="button"  data-dismiss="modal" aria-label="Close"  style={{left:"50%", position:"relative"}} className=" btn btn-secondary">
+         Annuler 
         </button>
       </form>
     </div>

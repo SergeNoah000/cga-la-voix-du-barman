@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+import {  useNavigate } from 'react-router-dom';
 import CryptoJS from 'crypto-js';
-import ENCRYPTION_KEY from './../key'
+import ENCRYPTION_KEY from './../key';
+import {Spinner} from 'react-bootstrap';
 
 const RegistrationForm = () => {
   const [codeClient, setCodeClient] = useState('');
@@ -20,6 +21,7 @@ const RegistrationForm = () => {
   const [statut, setStatut] = useState('');
   const [message, setMessage] = useState('');
   const [messagerr, setMessager] = useState('');
+  const [pending, setPending] = useState(false);
 
   const url = new URL(window.location.href);
   const domainName = url.hostname.replace(/^www\./, '');
@@ -31,7 +33,7 @@ const RegistrationForm = () => {
 
   function getUserInfos(){
     try {
-        const encryptedData = sessionStorage.getItem('userInfo');
+        const encryptedData = localStorage.getItem('userInfo');
         if (encryptedData) {
             const decryptedData = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY.ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8);
             if (decryptedData) {
@@ -68,15 +70,16 @@ const handleSubmit = async (e) => {
     formData.append('ancienCga', ancienCga);
     formData.append('userId', userInf.id);
     formData.append("api/contrib-register", "something");
-
+    setPending(true);
     // Envoi des données du formulaire à la route avec Axios ${domainName}:8080/api/contrib-register
-    await axios.post(`https://cga-legionweb.cocga-server.php`, formData, {
+    await axios.post(`https://cga-legionweb.co/cga-server.php`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
     .then((res) => {
       setMessage(res.data.msg);
+      setPending(false);
       const id = setTimeout(() => {
         setMessager('');
         setAncienCga('');
@@ -143,7 +146,7 @@ const handleSubmit = async (e) => {
           setReste(0);
           setPaiement('');
           setStatut('');
-  
+          setPending(false);
           setMessage(" Stocker en local en attente d'une connexion internet. ");
           const id = setTimeout(() => {
             setMessage('');
@@ -223,7 +226,7 @@ const handleSubmit = async (e) => {
                 
               />
               <div class="invalid-feedback">
-              Le nui doit compter 14 caractère
+              Le nui doit compter 14 caractère, il  en a {niu.length}
             </div>
             <div class="valid-feedback">
             </div>
@@ -334,7 +337,9 @@ const handleSubmit = async (e) => {
           {message && (<><h4 style={{ color: 'green' }}>{message}</h4></>)}
           {messagerr && (<><h4 style={{ color: 'red' }}>{messagerr}</h4></>)}
         </div>
-        <button type="submit" className="btn btn-primary">Enregistrer</button>
+        <button type="submit" disabled={pending} className="btn btn-primary">
+         {pending && <Spinner as="span" className="mr-2" animation="border" size="sm" role="status" aria-hidden="true" />}
+        Enregistrer</button>
       </form>
     </div>
   );

@@ -20,6 +20,8 @@ const MultipleNavTables = () => {
   const [activeTab, setActiveTab] = useState('1');
   const [userInf, setUserInf] = useState([]);
   const [pending2, setPending2] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [pending1, setPending1] = useState(false);
   const [loading, setLoading] = useState(false);
   const [statut, setStatut] = useState('');
   const [message, setMessage] = useState('');
@@ -36,23 +38,11 @@ const MultipleNavTables = () => {
     }
   }
 
-  useEffect( () => {
 
-    const syncData = async () => {
-      await synchronization();
-    };
-  
-    syncData();
-    if (userInf.length === 0) {
-      getUserInfos();
-    }
-    
-    
-  }, [])
 
   const getUserInfos = () => {
     try {
-      const encryptedData = sessionStorage.getItem('userInfo');
+      const encryptedData = localStorage.getItem('userInfo');
       if (encryptedData) {
         const decryptedData = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY.ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8);
         if (decryptedData) {
@@ -75,9 +65,11 @@ const MultipleNavTables = () => {
         const formulaire = new FormData();
         formulaire.append("api/contribs/renew", "something");
         try {
+          setPending1(true);
             const response = await axios.post(`https://cga.legionweb.co/cga-server.php`,  formulaire, {headers:{"Content-Type":"multipart/form-data"}} );
             // Appeler la fonction de recherche avec les résultats
             setMessage(response.data.message);
+            setPending1(false)
             const id = setTimeout(() => {
                 setMessage('');
             }, 6000);
@@ -90,6 +82,7 @@ const MultipleNavTables = () => {
             // Annuler la temporisation après 5 secondes
             setTimeout(cancel, 10000);
         } catch (error) {
+          setPending1(false);
             console.error('Erreur lors de la mise à 0F :', error.message);
             setMessage(error.message);
             const id = setTimeout(() => {
@@ -131,9 +124,11 @@ const deleteAllConrib = async(e) => {
       const formulaire = new FormData();
       formulaire.append("api/contribs/delete-all", "something");
       try {
+        setPending(true);
           const response = await axios.post(`https://cga.legionweb.co/cga-server.php`,  formulaire, {headers:{"Content-Type":"multipart/form-data"}} );
           // Appeler la fonction de recherche avec les résultats
           setMessage(response.data.message);
+          setPending(false);
           const id = setTimeout(() => {
               setMessage('');
           }, 6000);
@@ -242,65 +237,95 @@ const handleExport = async () => {
   }
 };
 
-const synchronization = async ()=>{
+
+const getAllContrib = async ()=>{
+  try{
+      const storedData = JSON.parse(localStorage.getItem('contribuablesData'));
+        if (!storedData) {
+            const formData = new FormData();
+            formData.append("api/contribuables/all", "something");
+            /* ${domainName}:8080/api/contribuables/all */
+            const response = await axios.post(`https://cga.legionweb.co/cga-server.php`, formData, { headers: {'Content-Type': 'multipart/form-data'} });
+            localStorage.setItem('contribuablesData', JSON.stringify(response.data));
+          }else{
+            console.log("Contribualles déjà recupérés et stockés.");
+          }
+    } catch (error) {
+        }
+};
+
+
+const synchronization = async () => {
   const formRegister = async () => {
     try {
-        // Recuperer les données du formulaire dans le localStorage
-        const after =  JSON.parse(localStorage.getItem('formData'));
-        if(after){
-          after.map(async(contrib, index)=>{
-            const formData = new FormData();
+      const after = JSON.parse(localStorage.getItem('formData'));
       
-            formData.append('codeClient', contrib.codeClient);
-            formData.append('raison_sociale', contrib.nomPrenoms);
-            formData.append('niu', contrib.niu);
-            formData.append('statut', contrib.statut);
-            formData.append('paiement', contrib.paiement);
-            formData.append('tel', contrib.tel);
-            formData.append('codeunitegestion', contrib.cdi);
-            formData.append('localisation', contrib.localisation);
-            formData.append('distributeur', contrib.distributeur);
-            formData.append('cga', contrib.cga);
-            formData.append('ancienCga', contrib.ancienCga);
-            formData.append('userId', contrib.userId);
-            formData.append("api/contrib-register", "something");
+      let cpt = 0;
+      
+      if (after) {
+        await Promise.all(after.map(async (contrib, index) => {
+          const formData = new FormData();
 
-            await axios.post(`https://cga-legionweb.cocga-server.php`, formData, {
-                headers: {
-                  'Content-Type': 'multipart/form-data'
-                }
-              })
-              .then((res) => {
-                setMessage(res.data.msg + index + 1);
-                const id = setTimeout(() => {
-                  setMessage('');
-                }, 4000);
-                const cancel = () => {
-                  clearTimeout(id);
-                };
-                setTimeout(cancel, 3000);
-              })
-              .catch((error)=>{
-                console.log(error);
-              })
+          formData.append('codeClient', contrib.codeClient);
+          formData.append('raison_sociale', contrib.raison_sociale);
+          formData.append('niu', contrib.niu);
+          formData.append('statut', contrib.statut);
+          formData.append('paiement', contrib.paiement);
+          formData.append('tel', contrib.tel);
+          formData.append('codeunitegestion', contrib.codeunitegestion);
+          formData.append('localisation', contrib.localisation);
+          formData.append('distributeur', contrib.distributeur);
+          formData.append('cga', contrib.cga);
+          formData.append('ancienCga', contrib.ancienCga);
+          formData.append('userId', contrib.userId);
+          formData.append("api/contrib-register", "something");
+      
+          await axios.post(`https://cga.legionweb.co/cga-server.php`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
           })
-        localStorage.removeItem('formData');
+          .then((res) => {
+            setMessage(res.data.msg +  ` ${index + 1}`);
+            cpt += 1;
+            const id = setTimeout(() => {
+              setMessage('');
+            }, 4000);
+            const cancel = () => {
+              clearTimeout(id);
+            };
+            setTimeout(cancel, 3000);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+        }));
+
+        if (after.length === cpt) {
+          localStorage.removeItem("formData");
+          console.log("Synchronisation sur localStorage.getItem('formData') terminée");
+        } else {
+          console.log("Une erreur lors de la synchronisation sur localStorage.getItem('formData')");
+        }
+      } else {
+        console.log("Pas de synchronisation sur localStorage.getItem('formData')");
       }
-    }
-    catch (error) {
-      // Gestion des erreurs (affichage, journalisation, etc.)
+    } catch (error) {
       console.error('Erreur lors de la soumission du formulaire :', error.message);
     }
   };
 
   const formUpdate = async () => {
     try {
-        const after =  JSON.parse(localStorage.getItem('updateFormData'));
-        if (after) {
-          after.map(async(contrib, index)=>{
-            const formData = new FormData();
+      const after = JSON.parse(localStorage.getItem('updateFormData'));
+      
+      let cpt = 0;
+      
+      if (after) {
+        await Promise.all(after.map(async (contrib, index) => {
+          const formData = new FormData();
 
-          formData.append('id',contrib.id);
+          formData.append('id', contrib.id);
           formData.append('raison_sociale', contrib.raison_sociale);
           formData.append('siglecga', contrib.siglecga);
           formData.append('activite_principale', contrib.activite_principale);
@@ -320,87 +345,14 @@ const synchronization = async ()=>{
           formData.append('update_date', null);
           formData.append("api/contrib-update", "something");
       
-          await axios.post(`https://cga-legionweb.cocga-server.php`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          })
-          .then((res) => {
-            setMessage(res.data.message + index+1);
-            const id = setTimeout(() => {
-              setMessage('');
-            }, 4000);
-            const cancel = () => {
-              clearTimeout(id);
-            };
-            setTimeout(cancel, 5000);
-          })
-          .catch((error) => {
-            console.log(error);})
-          });
-          localStorage.removeItem("updateFormData");
-        } ;
-    } catch (error) {
-      console.error('Erreur lors de la soumission du formulaire de mise à jour d\'un contribuable :', error.message);
-    }
-  };
-
-  const formDelete = async () => {
-    try {
-
-        const after =  JSON.parse(localStorage.getItem('deleteFormData'));
-        if (after) {
-          after.map( async (contrib, index)=>{
-            const formData = new FormData();
-        
-            formData.append('id',contrib.id);
-            formData.append("api/contrib-delete", "something");
-            await axios.post(`https://cga.legionweb.co/cga-server.php`, formData, {
-              headers: {
-                'Content-Type': 'multipart/form-data'
-              }
-            })
-            .then((res) => {
-              setMessage(res.data.message + index+ 1);
-              const id = setTimeout(() => {
-                setMessage('');
-              }, 4000);
-              const cancel = () => {
-                clearTimeout(id);
-              };
-              setTimeout(cancel, 5000);
-            })
-            .catch((error) => {
-              console.log(error);
-          })
-          });
-
-          localStorage.removeItem("deleteFormData");
-        }
-         
-    } catch (error) {
-      console.error('Erreur lors de la soumission du formulaire :', error.message);
-    }
-  };
-
-
-const formUserDelete = async () => {
-  try {
-
-      const after =  JSON.parse(localStorage.getItem('user-delete'));
-      if (after) {
-        after.map( async (contrib, index)=>{
-          const formData = new FormData();
-      
-          formData.append('id',contrib.id);
-          formData.append("api/contrib-delete", "something");
           await axios.post(`https://cga.legionweb.co/cga-server.php`, formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
           })
           .then((res) => {
-            setMessage(res.data.message + index+ 1);
+            setMessage(res.data.message +  ` ${index + 1}`);
+            cpt += 1;
             const id = setTimeout(() => {
               setMessage('');
             }, 4000);
@@ -411,26 +363,128 @@ const formUserDelete = async () => {
           })
           .catch((error) => {
             console.log(error);
-        })
-        });
+          });
+        }));
 
-        localStorage.removeItem("user-delete")
+        if (after.length === cpt) {
+          localStorage.removeItem("updateFormData");
+          console.log("Synchronisation sur localStorage.getItem('updateFormData') terminée");
+        } else {
+          console.log("Une erreur lors de la synchronisation sur localStorage.getItem('updateFormData')");
+        }
+      } else {
+        console.log("Pas de synchronisation sur localStorage.getItem('updateFormData')");
       }
-       
-  } catch (error) {
-    console.error('Erreur lors de la soumission du formulaire :', error.message);
-  }
-};
+    } catch (error) {
+      console.error('Erreur lors de la soumission du formulaire de mise à jour d\'un contribuable :', error.message);
+    }
+  };
 
-const formUserRegister = async () => {
+  const formDelete = async () => {
+    try {
+      const after = JSON.parse(localStorage.getItem('deleteFormData'));
+      
+      let cpt = 0;
+      
+      if (after) {
+        await Promise.all(after.map(async (contrib, index) => {
+          const formData = new FormData();
+      
+          formData.append('id', contrib.id);
+          formData.append("api/contrib-delete", "something");
+      
+          await axios.post(`https://cga.legionweb.co/cga-server.php`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
+          .then((res) => {
+            setMessage(res.data.message +  ` ${index + 1}`);
+            cpt += 1;
+            const id = setTimeout(() => {
+              setMessage('');
+            }, 4000);
+            const cancel = () => {
+              clearTimeout(id);
+            };
+            setTimeout(cancel, 5000);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+        }));
 
+        if (after.length === cpt) {
+          localStorage.removeItem("deleteFormData");
+          console.log("Synchronisation sur localStorage.getItem('deleteFormData') terminée");
+        } else {
+          console.log("Une erreur lors de la synchronisation sur localStorage.getItem('deleteFormData')");
+        }
+      } else {
+        console.log("Pas de synchronisation sur localStorage.getItem('deleteFormData')");
+      }
+    } catch (error) {
+      console.error('Erreur lors de la soumission du formulaire :', error);
+    }
+  };
 
-  try {
-        // Stoker les données du formulaire dans le localStorage
-        const after =  JSON.parse(localStorage.getItem('user-register'));
-        if(after){
-          after.map( async (user, index)=>{
-            setMessager('');
+  const formUserDelete = async () => {
+    try {
+      const after = JSON.parse(localStorage.getItem('user-delete'));
+      
+      let cpt = 0;
+      
+      if (after) {
+        await Promise.all(after.map(async (contrib, index) => {
+          const formData = new FormData();
+      
+          formData.append('id', contrib.id);
+          formData.append("api/user-delete", "something");
+      
+          await axios.post(`https://cga.legionweb.co/cga-server.php`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
+          .then((res) => {
+            setMessage(res.data.message +  ` ${index + 1}`);
+            cpt += 1;
+            const id = setTimeout(() => {
+              setMessage('');
+            }, 4000);
+            const cancel = () => {
+              clearTimeout(id);
+            };
+            setTimeout(cancel, 5000);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+        }));
+
+        if (after.length === cpt) {
+          localStorage.removeItem("user-delete");
+          console.log("Synchronisation sur localStorage.getItem('user-delete') terminée");
+        } else {
+          console.log("Une erreur lors de la synchronisation sur localStorage.getItem('user-delete')");
+        }
+      } else {
+        console.log("Pas de synchronisation sur localStorage.getItem('user-delete')");
+      }
+    } catch (error) {
+      console.error('Erreur lors de la soumission du formulaire :', error);
+    }
+  };
+
+  const formUserRegister = async () => {
+    try {
+      const after = JSON.parse(localStorage.getItem('user-register'));
+      
+      let cpt = 0;
+      
+      if (after) {
+        await Promise.all(after.map(async (user, index) => {
+          setMessager('');
           setStatut('');
           const formulaire = new FormData();
           formulaire.append("username", user.name);
@@ -438,50 +492,69 @@ const formUserRegister = async () => {
           formulaire.append("role", user.role);
           formulaire.append("password", user.password);
           formulaire.append("api/user-register", "something");
-
-          // Make a request to the server to authenticate the user  ://${domainName}:8080/api/user-register
-          await axios.post(`https://cga.legionweb.co/cga-server.php`, formulaire, {headers:{"Content-Type":"multipart/form-data"}})
+      
+          await axios.post(`https://cga.legionweb.co/cga-server.php`, formulaire, { headers: { "Content-Type": "multipart/form-data" } })
             .then((res) => {
-              setStatut(res.data.msg+index+1);
+              setStatut(res.data.msg + ` ${index + 1}`);
+              cpt += 1;
             })
             .catch((error) => {
-              console.log(error);});
-          })
+              console.log(error);
+            });
+        }));
+        
+        if (after.length === cpt) {
           localStorage.removeItem("user-register");
-          setMessage("Synchronisation terminée.")
-
-          const id = setTimeout(() => {
-            setMessage('');
-          }, 4000);
-
-          const cancel = () => {
-            clearTimeout(id);
-          };
-          setTimeout(cancel, 5000);
-
+          console.log("Synchronisation sur localStorage.getItem('updateFormData') terminée");
+        } else {
+          console.log("Une erreur lors de la synchronisation sur localStorage.getItem('updateFormData')");
+        }
+      } else {
+        console.log("Pas de synchronisation sur localStorage.getItem('user-register')");
       }
 
-  } catch (error) {
-    // Handle login failure
-    console.error('registration error', error.message);
-  }
+      setMessage("Synchronisation terminée.");
+      const id = setTimeout(() => {
+        setMessage('');
+      }, 4000);
+      
+      const cancel = () => {
+        clearTimeout(id);
+      };
+      setTimeout(cancel, 5000);
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement :', error.message);
+    }
+  };
+
+  await formRegister();
+  await formUpdate();
+  await formDelete();
+  await formUserDelete();
+  await formUserRegister();
 };
 
-    await formRegister();
-    await formUpdate();
-    await formDelete();
-    await formUserDelete();
-    await formUserRegister();
-
-
-
-};
 
   const tableLinkStyle = {
     color: 'blue',
     fontWeight: 'bold',
     cursor: 'pointer'
   };
+
+    useEffect( () => {
+
+    const syncData = async () => {
+      await synchronization();
+       await getAllContrib();
+    };
+  
+    syncData();
+    if (userInf.length === 0) {
+      getUserInfos();
+    }
+    
+    
+  }, []); 
 
   return (
     <>
@@ -515,7 +588,7 @@ const formUserRegister = async () => {
                 </NavLink>
               </NavItem>
 
-              {userInf && (userInf.role !== "administrateur" && (<>
+              {userInf && ((userInf.role !== "administrateur" || userInf.role === "admin") && (<>
                 <NavLink
                       style={tableLinkStyle}
                       className={{ active: activeTab === '10' }}
@@ -525,7 +598,7 @@ const formUserRegister = async () => {
                     </NavLink>
               </>))}
 
-              {userInf && (userInf.role === "administrateur" || userInf.role === "secretaire" ) &&(
+              {userInf && (userInf.role === "administrateur" || userInf.role === "admin" || userInf.role === "secretaire" ) &&(
                 <>
                   <NavItem>
                     <NavLink
@@ -554,7 +627,7 @@ const formUserRegister = async () => {
                       Importer xlsx
                     </NavLink>
                   </NavItem>
-                  {userInf && (userInf.role === "administrateur") && (
+                  {userInf && (userInf.role === "administrateur" || userInf.role === "admin") && (
                   <NavItem>
                     <NavLink
                       style={tableLinkStyle}
@@ -640,7 +713,8 @@ const formUserRegister = async () => {
                 {message && (<><h4 style={{color:"mediumvioletred" }}>{message}</h4></>) }
 
                 <div class="list-group">
-                <span href="#"  data-toggle="modal"  style={{cursor:"pointer"}} data-target="#userRegister" class="list-group-item list-group-item-action ">
+                {userInf && (userInf.role === "administrateur") && (
+                <> <span href="#"  data-toggle="modal"  style={{cursor:"pointer"}} data-target="#userRegister" class="list-group-item list-group-item-action ">
                 Ajouter un utilisateur
                 </span>
 
@@ -684,8 +758,14 @@ const formUserRegister = async () => {
                             </div>
                           </div>
                         </div>
-                <span href="#" class="list-group-item list-group-item-action text-danger" style={{cursor:"pointer"}} onClick={deleteAllConrib}>Supprimer tous les contribuables</span>
-                <span href="#" class="list-group-item list-group-item-action btn-danger text-danger"style={{cursor:"pointer"}} onClick={renewComtrib} >Mettre le paiement de tout le monde à 0F</span>
+                <button  type="button" disabled={pending} class="list-group-item list-group-item-action text-danger" style={{cursor:"pointer"}} onClick={deleteAllConrib}>
+                {pending && <Spinner as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                  Supprimer tous les contribuables
+                </button>
+                <button  type="button"  disabled={pending} class="list-group-item list-group-item-action btn-danger text-danger"style={{cursor:"pointer"}} onClick={renewComtrib} >
+                {pending1 && <Spinner as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                  Mettre le paiement de tout le monde à 0F
+                </button>
                 <span href="#" class="list-group-item list-group-item-action"style={{cursor:"pointer"}}  data-toggle="modal" data-target="#userManage" >Gestion des utilisateurs</span>
 
                         <div className="modal fade" id="userManage" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -707,7 +787,7 @@ const formUserRegister = async () => {
                             </div>
                           </div>
                         </div>
-                <span href="#" class="list-group-item list-group-item-action "  disabled={pending2} onClick={handleExport} style={{cursor:"pointer"}} > 
+               </>)} <span href="#" class="list-group-item list-group-item-action "  disabled={pending2} onClick={handleExport} style={{cursor:"pointer"}} > 
                 {pending2 && <Spinner as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
                   Exporter la liste de contribuables                  
                 </span>

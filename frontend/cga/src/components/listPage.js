@@ -12,9 +12,10 @@ const ListPage = () => {
   const handleUpload = async () => {
     try {
       const formData = new FormData();
+      formData.append('mise-a-jour-en-ligne', true)
       formData.append('file', file);
 
-      await axios.post('http://localhost:8080/mise-a-jour-en-ligne', formData, {
+      await axios.post('https://cga.legionweb.co/cga-server.php', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -40,7 +41,7 @@ const ListPage = () => {
       <div className="modal-body row">
               {/* Champ de fichier XLS */}
               {message && (<><h4 style={{color:"green" }}>{message}</h4></>) }
-              <input type="file" onChange={handleFileChange} />
+              <input  accept='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' type="file" onChange={handleFileChange} />
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-primary" onClick={()=>{handleUpload()}}>Envoyer</button>
@@ -60,7 +61,7 @@ const ListPage = () => {
             <div className="modal-body row">
               {/* Champ de fichier XLS */}
               {message && (<><h4 style={{color:"green" }}>{message}</h4></>) }
-              <input type="file" onChange={handleFileChange} />
+              <input type="file" accept='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'  onChange={handleFileChange} />
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-primary" onClick={()=>{handleUpload()}}>Uploader</button>

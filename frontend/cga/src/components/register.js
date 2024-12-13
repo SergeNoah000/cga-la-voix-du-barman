@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import encryptTextWithKey from '../utils/store';
 import ENCRYPTION_KEY from '../key.js';
 import axios from 'axios';
+import { Button, Spinner } from 'react-bootstrap';
 
 const Register = () => {
 
@@ -12,6 +13,8 @@ const Register = () => {
   const [role, setRole] = useState('');
   const [messageerr, setMessageerr] = useState('');
   const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [check, setCheck] = useState(false)
 
 
   const url = new URL(window.location.href);
@@ -32,6 +35,7 @@ const Register = () => {
 
       setMessageerr('');
       setStatus('');
+      setLoading(true);
       // Encrypt the password before sending it to the server
       const encryptedPassword = encryptTextWithKey(password, ENCRYPTION_KEY.ENCRYPTION_KEY);
       const formulaire = new FormData();
@@ -44,11 +48,12 @@ const Register = () => {
       // Make a request to the server to authenticate the user  ://${domainName}:8080/api/user-register
       await axios.post(`https://cga.legionweb.co/cga-server.php`, formulaire, {headers:{"Content-Type":"multipart/form-data"}})
         .then((res) => {
-          console.log(res.data);
+          setLoading(false);
           setStatus(res.data.msg);
         })
         .catch((error) => {
           console.log(error);
+          setLoading(false);
           if (error.message && error.message === "Network Error") {
             const data = [{
               name:name,
@@ -63,7 +68,7 @@ const Register = () => {
                 after.push(...data);
               localStorage.setItem('user-register', JSON.stringify(after));
             }else{
-              localStorage.setItem('user-resgister', JSON.stringify(data));
+              localStorage.setItem('user-register', JSON.stringify(data));
             }
               setMessageerr('');
       
@@ -151,7 +156,7 @@ const Register = () => {
             <label className="mb-2 text-muted" htmlFor="cpassword">Mot de passe </label>
             <input
               name='cpassword'
-              type="password"
+              type={check ? "text" : "password"}
               className={ password.length > 0 ? password.length < 8 ? "form-control is-invalid" : "form-control is-valid" : "form-control" }
               
               onBlur={(e) => setPassword(e.target.value)}
@@ -167,7 +172,7 @@ const Register = () => {
           <div className="mb-3">
             <label className="mb-2 text-muted" htmlFor="password">Confirmer le mot de passe</label>
             <input
-              type="password"
+              type={check ? "text" :"password"}
               className={ cpassword.length > 0 ? password === cpassword  ?"form-control is-valid": "form-control is-invalid": "form-control"}
               name="password"
               onBlur={(e) => setCpassword(e.target.value)}
@@ -178,13 +183,29 @@ const Register = () => {
             </div>
             <div className="valid-feedback">
             </div>
+
+            <div className="ml-3 mb-4 mt-2">
+                    <div className="form-check">
+                      <input onChange={()=>setCheck(!check)} type="checkbox" name="remember" id="remember" className="form-check-input" />
+                      <label htmlFor="remember" className="form-check-label">
+                       Afficher les mots de passe
+                      </label>
+                    </div>
+                  </div>
           </div>
 
 
           <div className="align-items-center">
             {messageerr && (<span style={{ color: 'red' }}>{messageerr}</span>)}<br />
             {status && (<span style={{ color: 'green' }}>{status}</span>)} <br />
-            <button type="submit" className="btn btn-primary ms-auto">
+            <button  disabled={loading} type="submit" className="btn btn-primary ms-auto">
+             {loading === true && (<Spinner
+              as="span"
+              animation="border"
+              size="sm"
+              role="status"
+              aria-hidden="true"
+            />)}
               Enregistrer
             </button>
           </div>

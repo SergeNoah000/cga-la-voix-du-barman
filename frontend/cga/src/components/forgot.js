@@ -12,30 +12,16 @@ const ForgotPassword = () => {
         <div className="row justify-content-sm-center h-100">
           <div className="col-xxl-4 col-xl-5 col-lg-5 col-md-7 col-sm-9">
             <div className="text-center my-5">
-              <img src="/logo512.png" alt="logo" width="100" />
+              <img src="/log512.png" alt="logo" width="300" />
             </div>
             <div className="card shadow-lg">
               <div className="card-body p-5">
-                <h1 className="fs-4 card-title fw-bold mb-4">Forgot Password</h1>
-                <form onSubmit={handleSubmit} className="needs-validation" noValidate autoComplete="off">
-                  <div className="mb-3">
-                    <label className="mb-2 text-muted" htmlFor="email">
-                      E-Mail Address
-                    </label>
-                    <input id="email" type="email" className="form-control" name="email" value="" required autoFocus />
-                    <div className="invalid-feedback">Email is invalid</div>
-                  </div>
-
-                  <div className="d-flex align-items-center">
-                    <button type="submit" className="btn btn-primary ms-auto">
-                      Send Link
-                    </button>
-                  </div>
-                </form>
+                <h1 className="fs-4 card-title mb-4">Veuillez contacter l'administrateur (le président du CGA) et lui demander de modifier votre mot de passe</h1>
+                
               </div>
               <div className="card-footer py-3 border-0">
                 <div className="text-center">
-                  Remember your password? <Link to="/login" className="text-dark">Login</Link>
+                  Vous vous souvenez du mot de passe ? <Link to="/login" className="text-blue">Connectez-vous.</Link>
                 </div>
               </div>
             </div>

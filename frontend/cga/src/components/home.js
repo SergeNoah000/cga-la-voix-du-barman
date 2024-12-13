@@ -57,8 +57,8 @@ const HomePage = () => {
 
   function getUserInfos(){
     try {
-        const encryptedData = sessionStorage.getItem('userInfo');
-        const encryptedData1 = sessionStorage.getItem('userInfo');
+        const encryptedData = localStorage.getItem('userInfo');
+        //const encryptedData1 = sessionStorage.getItem('userInfo');
         if (encryptedData) {
             const decryptedData = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY.ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8);
             if (decryptedData) {
@@ -68,6 +68,7 @@ const HomePage = () => {
             }
         }else{
             navigateTo('/login');
+            console.log("userinf  non recupéré.");
         }
       }catch(err){
             
@@ -340,10 +341,10 @@ const HomePage = () => {
         synchronization();
         setLoading(true);
       } */
-    window.addEventListener('scroll', handleScroll);
+    /* window.addEventListener('scroll', handleScroll);
     return () => {
       window.removeEventListener('scroll', handleScroll);
-    };
+    }; */
   }, [loading, currentPage]);
 
   useEffect(() => {
@@ -363,6 +364,7 @@ const HomePage = () => {
            
   <button className="btn btn-warning me-2" onClick={(e)=>{
     sessionStorage.removeItem('userInfo');
+    localStorage.removeItem('userInfo');
     navigateTo('/login');
   }}>Deconnexion</button> 
   

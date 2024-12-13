@@ -28,7 +28,7 @@ const SearchForm = ({ onSearch }) => {
 
   function getUserInfos(){
     try {
-        const encryptedData = sessionStorage.getItem('userInfo');
+        const encryptedData = localStorage.getItem('userInfo');
         if (encryptedData) {
             const decryptedData = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY.ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8);
             if (decryptedData) {
@@ -70,10 +70,10 @@ const SearchForm = ({ onSearch }) => {
             if (storedData) {
               searchResults = storedData.filter((contribuable) => {
                 return (
-                  (niu && contribuable.niu.toLowerCase().includes(niu.toLowerCase())) ||
-                  (raisonSociale && contribuable.raison_sociale.toLowerCase().includes(raisonSociale.toLowerCase())) ||
-                  (numeroTel && contribuable.tel.toLowerCase().includes(numeroTel.toLowerCase())) ||
-                  ( localisation && contribuable.localisation.toLowerCase().includes(localisation.toLowerCase()))
+                  (niu && contribuable.niu.toLowerCase()?.includes(niu.toLowerCase())) ||
+                  (raisonSociale && contribuable.raison_sociale?.toLowerCase().includes(raisonSociale.toLowerCase())) ||
+                  (numeroTel && contribuable.tel?.toLowerCase().includes(numeroTel.toLowerCase())) ||
+                  ( localisation && contribuable.localisation?.toLowerCase().includes(localisation.toLowerCase()))
                 );
               });
             }
@@ -245,13 +245,13 @@ const SearchForm = ({ onSearch }) => {
                                                                                   Options
                                                                                 </button>
                                                                                 <div class="dropdown-menu">
-                                                                                  <span /* onClick={()=>{setShowModal(index); setShowModal2(-1)}} */ data-toggle="modal" data-target={"#exampleModal_1"+ contribuable.id} class="dropdown-item " href="#">Editer</span>
-                                                                                  <span /* onClick={()=>{setShowModal2(index); setShowModal(-1)}} */ data-toggle="modal" data-target={"#exampleModal"+ contribuable.id} class="dropdown-item text-danger" href="#">Supprimer</span>
+                                                                                  <span data-toggle="modal" data-target={"#exampleModal_1"+ contribuable.id} class="dropdown-item " href="#">Editer</span>
+                                                                                  <button disabled={userInf && userInf.role !== 'administrateur'} data-toggle="modal" data-target={"#exampleModal"+ contribuable.id} class="dropdown-item text-danger" >Supprimer</button>
                                                                                 </div>
                                                                               </div>
                                                                               </td>
                                   </tr>
-                                  {userInf && userInf.role === 'administrateur' && (
+                                  {userInf && (userInf.role === 'administrateur' || userInf.role === 'secretaire')  && (
                                   <>
                                   <div className="modal fade" id={"exampleModal_1"+ contribuable.id} tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                   <div className="modal-dialog" role="document">

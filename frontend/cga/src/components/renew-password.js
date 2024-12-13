@@ -14,6 +14,7 @@ const ReneWPassword = () => {
   const [status, setStatus] = useState('');
   const [oublier, setOublier] = useState(false);
   const [userInf, setUserInf] = useState([]);
+  const [check, setCheck] = useState(false);
 
 
 
@@ -45,10 +46,10 @@ const ReneWPassword = () => {
     if (oldPassword.trim() ==="") {
         return;
     }
-    if (oldPassword.length > 10 && oldPassword !== userInf?.password){
+/*     if (oldPassword.length > 10 && oldPassword !== userInf?.password){
         setMessageerr("Une erreur s'est produite !");
         return;
-    }else if((oublier ? oldPassword  !== userInf?.password : encryptTextWithKey(oldPassword, ENCRYPTION_KEY.ENCRYPTION_KEY) !== userInf?.password ) || (cpassword !== password) || password === '' || password.length<8) {
+    }else */ if((oublier ? oldPassword  !== userInf?.password : encryptTextWithKey(oldPassword, ENCRYPTION_KEY.ENCRYPTION_KEY) !== userInf?.password ) || (cpassword !== password) || password === '' || password.length<8) {
       setMessageerr("Ancien mot de passe incorrect ou trop petit!");
       return;
     }  
@@ -133,7 +134,7 @@ const ReneWPassword = () => {
           <div className="mb-3" id="resetPass">
             <label className="mb-2 text-muted" htmlFor="name">Ancien mot de passe</label>
             <input
-              type="password"
+              type={check ? "text" : "password"}
               className={oldPassword.length > 0 ? encryptTextWithKey(oldPassword, ENCRYPTION_KEY.ENCRYPTION_KEY) === userInf?.password ? "form-control is-valid": " is-invalid form-control":"form-control"}
               name="name"
               onBlur={(e) => setOldPassword(e.target.value)}
@@ -151,7 +152,7 @@ const ReneWPassword = () => {
             <label className="mb-2 text-muted" htmlFor="cpassword">Nouveau mot de passe </label>
             <input
               name='cpassword'
-              type="password"
+              type={check ? "text" : "password"}
               className={ password.length > 0 ? password.length < 8 ? "form-control is-invalid": "form-control is-valid": "form-control"}
               
               onBlur={(e) => setPassword(e.target.value)}
@@ -167,7 +168,7 @@ const ReneWPassword = () => {
           <div className="mb-3">
             <label className="mb-2 text-muted" htmlFor="password">Confirmer le mot de passe</label>
             <input
-              type="password"
+              type={check? "text": "password"}
               className={ cpassword.length > 0 ? password === cpassword  ?"form-control is-valid": "form-control is-invalid": "form-control"}
               name="password"
               onBlur={(e) => setCpassword(e.target.value)}
@@ -179,6 +180,15 @@ const ReneWPassword = () => {
             <div className="valid-feedback">
             </div>
           </div>
+
+          <div className="ml-3 mb-4">
+                    <div className="form-check">
+                      <input onChange={()=>setCheck(!check)} type="checkbox" name="remember" id="remember" className="form-check-input" />
+                      <label htmlFor="remember" className="form-check-label">
+                       Afficher le mot de passe
+                      </label>
+                    </div>
+                  </div>
 
 
           <div className="align-items-center">

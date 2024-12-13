@@ -137,7 +137,8 @@ const DgiCompare = () => {
       <div className="modal-body row">
               {/* Champ de fichier XLS */}
               {message && (<><h4 style={{color:"green" }}>{message}</h4></>) }
-              <input type="file" onChange={handleFileChange} />
+              <input type="file" accept='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' onChange={handleFileChange} />
+              
             </div>
             <div className="modal-footer">
             {uploadProgress ===100 && (

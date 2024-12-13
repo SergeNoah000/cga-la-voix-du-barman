@@ -4,11 +4,14 @@ import encryptTextWithKey from '../utils/store';
 import ENCRYPTION_KEY from '../key.js';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
+import {Spinner} from 'react-bootstrap';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState('');
+  const [pending, setPending] = useState(false);
+  const [check, setCheck] = useState(false);
 
   const navagateTo = useNavigate();
 
@@ -18,18 +21,36 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
+    async function hashPassword(password) {
+      // Convertir le mot de passe en bytes
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+  
+      // Calculer le hash SHA-256
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data); 
+  
+      // Convertir le hash en tableau d'octets
+      const hashArray = Array.from(new Uint8Array(hashBuffer)); 
+  
+      // Convertir le tableau d'octets en chaîne hexadécimale
+      const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+  
+      return hashHex; // Retourner la chaîne de caractères du hash
+  }
+
     try {
       // Encrypt the password before sending it to the server
-      const encryptedPassword = encryptTextWithKey(password, ENCRYPTION_KEY.ENCRYPTION_KEY);
+      const encryptedPassword = await hashPassword(password);
       const form = new FormData();
       form.append("api/login", "ttest");
       form.append("username", username);
       form.append("password", encryptedPassword);
-      
+      setPending(true);
       // Make a request to the server to authenticate the user at http://${domainName}:8080/api/login
       await axios.post(`https://cga.legionweb.co/cga-server.php`, form)
       .then((res)=>{
-        setStatus(res.data.msg)
+        setStatus(res.data.msg);
+        setPending(false);
         if (res.status === 202) {
           const id = setTimeout(() => {
           setStatus('');
@@ -51,6 +72,7 @@ const Login = () => {
       }})
       .catch((err)=>{
         console.log(err);
+        setPending(false);
         setStatus(err.message);
         const id = setTimeout(() => {
           setStatus('');
@@ -102,12 +124,21 @@ const Login = () => {
                         Mot de passe oublié ?
                       </Link>
                     </div>
-                    <input id="password" type="password" className="form-control" name="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    <input id="password" type={check ? "text":"password"} className="form-control" name="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                     <div className="invalid-feedback">Password is required</div>
+                  </div>
+                  <div className="ml-3 mb-4">
+                    <div className="form-check">
+                      <input onChange={()=>setCheck(!check)} type="checkbox" name="remember" id="remember" className="form-check-input" />
+                      <label htmlFor="remember" className="form-check-label">
+                       Afficher le mot de passe
+                      </label>
+                    </div>
                   </div>
 
                   <div className="">
-                    <button style={{position:"relative", left:"30%"}} type="submit" className="btn btn-primary ms-auto">
+                    <button disabled={pending} style={{position:"relative", left:"30%"}} type="submit" className="btn btn-primary ms-auto">
+                      {pending && <Spinner as="span" className="mr-2" animation="border" size="sm" role="status" aria-hidden="true" />}
                       Connexion
                     </button>
                   </div>

@@ -17,7 +17,7 @@ function App() {
             <Route path='/' element={<HomePage />} />
             <Route path='/contrib-register' element={<RegistrationForm />} />
             <Route path='/login' element={<Login />} />
-            <Route path='/test' element={<MultipleNavTables />} />
+            {/* <Route path='/test' element={<MultipleNavTables />} /> */}
             <Route path='/forgot-password' element={<ForgotPassword />} />
             <Route path='/reset-password' element={<ResetPassword />} />
             <Route path='*' element={<NoPage />} />

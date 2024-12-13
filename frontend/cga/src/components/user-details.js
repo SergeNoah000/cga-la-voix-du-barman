@@ -50,6 +50,7 @@ const UserDetails = (DataSend) => {
       return;
     }else if(password.length !== 0  && (cpassword !== password || password.length < 8 )){
       setMessageerr("Verifiez les mots sont corrects et correspondent !");
+      return ;
     }
     try {
 
@@ -57,7 +58,12 @@ const UserDetails = (DataSend) => {
       setStatus('');
       setPending1(true);
       // Encrypt the password before sending it to the server
-      const encryptedPassword = encryptTextWithKey(password, ENCRYPTION_KEY.ENCRYPTION_KEY);
+      let encryptedPassword = '';
+      if (password.length>0) {
+        encryptedPassword = encryptTextWithKey(password, ENCRYPTION_KEY.ENCRYPTION_KEY);
+      } else {
+        encryptedPassword = user.password;
+      }
       const formulaire = new FormData();
       formulaire.append("username", name);
       formulaire.append("fullname", fullname);
@@ -69,7 +75,6 @@ const UserDetails = (DataSend) => {
       // Make a request to the server to authenticate the user  ://${domainName}:8080/api/user-register
       await axios.post(`https://cga.legionweb.co/cga-server.php`, formulaire, {headers:{"Content-Type":"multipart/form-data"}})
         .then((res) => {
-          console.log(res.data);
           setStatus(res.data.msg);
           setPending1(false);
         })
@@ -208,7 +213,7 @@ const UserDetails = (DataSend) => {
 
   return (
     <div className="card shadow-lg">
-      <div className="card-body p-4">
+      <div className="card-body  container  row col p-4">
         <form method="POST" className="needs-validation" noValidate onSubmit={handleSubmit}>
 
           <div className="mb-3">

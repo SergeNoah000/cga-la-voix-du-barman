@@ -22,7 +22,7 @@ const ValidateContrib = () => {
 
   function getUserInfos() {
     try {
-      const encryptedData = sessionStorage.getItem('userInfo');
+      const encryptedData = localStorage.getItem('userInfo');
       if (encryptedData) {
         const decryptedData = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY.ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8);
         if (decryptedData) {
@@ -31,6 +31,7 @@ const ValidateContrib = () => {
         }
       } else {
         navigateTo('/login');
+        console.log("userinf non recupéré");
       }
     } catch (err) {
       console.error(err);
@@ -54,9 +55,9 @@ const ValidateContrib = () => {
     }
   };
 
-  const handleClick = () => {
+  const handleClick = async() => {
     setLoading(true);
-    fetchContribuables();
+    await fetchContribuables();
   };
 
   useEffect(() => {
@@ -88,11 +89,12 @@ const ValidateContrib = () => {
           'Cliquez pour Charger'
         )}
       </Button>
+
       {contribuables.length === 0 && !loading && <p>Pas d'ajout recente à valider.</p>}
       {contribuables.length > 0 && (
       <>
           {message && (<><div style={{color:'green'}}><h3>{message}</h3></div></>)}
-          {messagerr && (<><div style={{color:'red'}}><h3>{messagerr}</h3></div></>)}
+          {messagerr && (<><div style={{color:'mediumvioletred'}}><h3>{messagerr}</h3></div></>)}
           {contribuables && contribuables.length !==0 && (<><span style={{color:'green'}}> {contribuables.length} contribuables</span></>)}
           <table className="table  table-bordered mt-4">
         <thead>
@@ -146,14 +148,21 @@ const ValidateContrib = () => {
                     <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708l-1.585-1.585z"/>
                 </svg>
                 </span>
-                <span  title='Valider' className="btn btn-outline-success ml-2" onClick={()=>{
-                  console.log( {niu:contribuable.niu, valide: true})
-                    axios.post(`http://${domainName}:8080/api/contrib/validate`, {niu:contribuable.niu, valide: true})
-                    .then((res)=>{
-                        setMessage(res.message);
-                      console.log(res)
+                <span  title='Valider' className="btn btn-outline-success ml-2" onClick={ async ()=>{
+
+                  const formData = new FormData();
+                  formData.append("api/contrib/validate", "something");
+                  formData.append("niu", contribuable.niu);
+                  formData.append("valide", true);
+
+                  setLoading(true);
+                   await axios.post(`https://cga.legionweb.co/cga-server.php`, formData, {headers:{"Content-Type":"multipart/form-data"}})
+                    .then(async (res)=>{
+                        setMessage(res.data.message);
+                        await fetchContribuables();
                         const id = setTimeout(() => {
                             setMessage('');
+                            setLoading(false);
                           }, 4000);
                         
                           // Définir une fonction de rappel pour annuler la temporisation
@@ -166,7 +175,8 @@ const ValidateContrib = () => {
                     
                     })
                     .catch((err)=>{
-                        setMessagerr("Nous avec rencontrer un problème.\n " + err.message);
+                        setMessagerr("Nous avons rencontré un problème.\n " + err.message);
+                        setLoading(false);
                         console.log(err);
                         const id = setTimeout(() => {
                             setMessagerr('');
@@ -187,10 +197,18 @@ const ValidateContrib = () => {
                 </svg>
                 </span>
 
-                <span  title='Supprimer' className="btn btn-outline-danger ml-2" onClick={()=>{
-                        axios.post(`http://${domainName}:8080/api/contrib/validate`, {id:contribuable.id, valide: false})
-                        .then((res)=>{
-                            setMessage(res.message);
+                <span  title='Supprimer' className="btn btn-outline-danger ml-2" onClick={async ()=>{
+                        const formData = new FormData();
+                        formData.append("api/contrib/validate", "something");
+                        formData.append("niu", contribuable.niu);
+                        formData.append("valide", false);
+
+                        setLoading(true);
+                         await axios.post(`https://cga.legionweb.co/cga-server.php`, formData, {headers:{"Content-Type":"multipart/form-data"}})
+                          .then(async (res)=>{
+                            setLoading(false);
+                            await fetchContribuables();
+                            setMessage(res.data.message);
                             const id = setTimeout(() => {
                                 setMessage('');
                             }, 4000);
@@ -205,7 +223,8 @@ const ValidateContrib = () => {
                         
                         })
                         .catch((err)=>{
-                            setMessagerr("Nous avec rencontrer un problème.\n " + err.message);
+                            setLoading(false);
+                            setMessagerr("Nous avons rencontrez un problème.\n " + err.message);
                             const id = setTimeout(() => {
                                 setMessagerr('');
                             }, 4000);

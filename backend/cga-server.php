@@ -282,12 +282,9 @@ function compareAndUpdateDatabase($filePath, $database)
     }
 }
 
-$app->run(); */
+$app->run(); 
 
-<?php
 
-use Slim\Factory\AppFactory;
-use Slim\Middleware\BodyParsingMiddleware;
 
 require __DIR__ . '/vendor/autoload.php';
 
