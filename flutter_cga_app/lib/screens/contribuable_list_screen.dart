@@ -65,6 +65,9 @@ class _ContribuablesTableState extends State<ContribuablesTable> {
     if (list.isEmpty) {
       // Si la page est vide, on considère qu'il n'y a plus de données
       _hasMoreData = false;
+       setState(() {        
+        _isLoading = false;
+      });
     } else {
       List<ContribuableModel> newContribuables = list
           .map((item) => ContribuableModel.fromMap(item))
@@ -99,14 +102,8 @@ class _ContribuablesTableState extends State<ContribuablesTable> {
       return const Center(child: Text('Aucun contribuable trouvé.'));
     }
 
-    if (!_hasMoreData && _contribuables.isNotEmpty) {
-  return const Padding(
-    padding: EdgeInsets.all(8.0),
-    child: Text('Tous les contribuables ont été chargés.'),
-  );
-}
 
-if (_isLoading && _contribuables.isEmpty) {
+if (_isLoading ) {
   return const Center(child: CircularProgressIndicator());
 }
 

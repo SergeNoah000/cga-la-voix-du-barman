@@ -28,7 +28,7 @@ class _UserListScreenState extends State<UserListScreen> {
       _isLoading = true; // Afficher le loader
     });
 
-    List<UserModel> users = await UserRepository().getRemoteUsers();
+    List<UserModel> users = await UserRepository().getLocalUsers();
     if (users.isNotEmpty) {
       setState(() {
         _users = users;

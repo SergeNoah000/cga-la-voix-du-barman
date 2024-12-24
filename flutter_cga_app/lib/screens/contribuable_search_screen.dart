@@ -67,15 +67,18 @@ class _ContribuablesSearchPageState extends State<ContribuablesSearchPage> {
         page: _currentPage,
       );
 
+      print(results);
+
       setState(() {
         _searchResults.addAll(results['data']
             .map<ContribuableModel>((item) => ContribuableModel.fromMap(item))
             .toList());
-        _totalPages = results['pagination']['totalPages'];
+        _totalPages = results['pagination']['totalPages'] ?? 0;
         if (!isLoadMore) _currentPage = 1;
       });
-    } catch (e) {
+    } catch (e, trace) {
       print('Erreur lors de la recherche : $e');
+      print("trace: $trace");
     } finally {
       setState(() {
         _isLoading = false;
@@ -102,8 +105,8 @@ class _ContribuablesSearchPageState extends State<ContribuablesSearchPage> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Confirmation'),
-          content:
-              const Text('Êtes-vous sûr de vouloir supprimer ce contribuable ?'),
+          content: const Text(
+              'Êtes-vous sûr de vouloir supprimer ce contribuable ?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -143,7 +146,8 @@ class _ContribuablesSearchPageState extends State<ContribuablesSearchPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ContribuableFormScreen(contribuable: contribuable),
+        builder: (context) =>
+            ContribuableFormScreen(contribuable: contribuable),
       ),
     ).then((value) {
       if (value == true) {
@@ -269,12 +273,14 @@ class _ContribuablesSearchPageState extends State<ContribuablesSearchPage> {
                           DataCell(Row(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                icon:
+                                    const Icon(Icons.edit, color: Colors.blue),
                                 onPressed: () =>
                                     _editContribuable(contribuable),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () =>
                                     _deleteContribuable(contribuable.id as int),
                               ),
@@ -294,8 +300,7 @@ class _ContribuablesSearchPageState extends State<ContribuablesSearchPage> {
               ),
             ),
           if (_isFetchingMore)
-            const Padding
-(
+            const Padding(
               padding: EdgeInsets.all(8.0),
               child: Center(
                 child: CircularProgressIndicator(),

@@ -116,6 +116,7 @@ class ContribuableModel {
       upToDate: map['upToDate'] ?? 0,
       creationDate: map['creation_date'],
       updateDate: map['update_date'],
+      
     );
   }
 }

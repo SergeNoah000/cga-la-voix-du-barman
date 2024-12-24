@@ -71,40 +71,39 @@ class _MainScreenState extends State<MainScreen> {
     UserRepository().syncUsers();
   }
 
-
   // Fonction pour réinitialiser les contribuables
-Future<void> _resetContribuables() async {
-  // Logique de réinitialisation : peut-être appeler une API ou nettoyer la base locale.
-  await ServiceContribuables().resetContribuablesPayments();
-}
+  Future<void> _resetContribuables() async {
+    // Logique de réinitialisation : peut-être appeler une API ou nettoyer la base locale.
+    await ServiceContribuables().resetContribuablesPayments();
+  }
 
 // Fonction pour supprimer tous les contribuables
-Future<void> _deleteAllContribuables() async {
-  // Logique de suppression : peut-être appeler une API ou vider la base locale.
-  await ServiceContribuables().deleteAllContribuables();
-}
+  Future<void> _deleteAllContribuables() async {
+    // Logique de suppression : peut-être appeler une API ou vider la base locale.
+    await ServiceContribuables().deleteAllContribuables();
+  }
 
 // Fonction pour afficher un dialogue de confirmation
-Future<bool?> _showConfirmationDialog(BuildContext context, String message) async {
-  return showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text("Confirmation"),
-      content: Text(message),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text("Annuler"),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text("Confirmer"),
-        ),
-      ],
-    ),
-  ); // Retourne false si le dialogue est annulé
-}
-
+  Future<bool?> _showConfirmationDialog(
+      BuildContext context, String message) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirmation"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Annuler"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Confirmer"),
+          ),
+        ],
+      ),
+    ); // Retourne false si le dialogue est annulé
+  }
 
   Future<void> _checkUserLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
@@ -134,8 +133,6 @@ Future<bool?> _showConfirmationDialog(BuildContext context, String message) asyn
       ];
     });
   }
-
-
 
 // Future<void> importExcel(BuildContext context) async {
 //   try {
@@ -204,16 +201,12 @@ Future<bool?> _showConfirmationDialog(BuildContext context, String message) asyn
 //     );
 //   }
 // }
-  
-  
-  
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
-
-  
 
   @override
   Widget build(BuildContext context) {
@@ -227,76 +220,87 @@ Future<bool?> _showConfirmationDialog(BuildContext context, String message) asyn
 
     return Scaffold(
       appBar: AppBar(title: const Text('Gestion des Contribuables')),
-        drawer: Drawer(
-          child: ListView(
-            children: <Widget>[
-              const DrawerHeader(
-                decoration: BoxDecoration(color: Colors.orange),
-                child: Text(
-                  'Menu',
-                  style: TextStyle(color: Colors.white, fontSize: 24),
-                ),
+      drawer: Drawer(
+        child: ListView(
+          children: <Widget>[
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.orange),
+              child: Text(
+                'Menu',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Accueil'),
+              onTap: () => Navigator.pushNamed(context, '/'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_add),
+              title: const Text('Ajouter Utilisateur'),
+              onTap: () => Navigator.pushNamed(context, '/addUser'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.search),
+              title: const Text('Rechercher'),
+              onTap: () => Navigator.pushNamed(context, '/search'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.file_upload),
+              title: const Text('Synchroniser les modifications locales'),
+              onTap: () async {
+                await synModifications(context);
+              },
+            ),
+            if (isAdmin) ...[
+              ListTile(
+                leading: const Icon(Icons.refresh),
+                title: const Text('Réinitialiser les contribuables'),
+                onTap: () async {
+                  bool confirm = await _showConfirmationDialog(
+                    context,
+                    "Êtes-vous sûr de vouloir réinitialiser les contribuables ?",
+                  ) as bool;
+                  if (confirm) {
+                    await _resetContribuables();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                              "Tous les contribuables ont été réinitialisés.")),
+                    );
+                  }
+                },
               ),
               ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Accueil'),
-                onTap: () => Navigator.pushNamed(context, '/'),
+                leading: const Icon(Icons.delete),
+                title: const Text('Supprimer tous les contribuables'),
+                onTap: () async {
+                  bool confirm = await _showConfirmationDialog(
+                    context,
+                    "Êtes-vous sûr de vouloir supprimer tous les contribuables ? Cette action est irréversible.",
+                  ) as bool;
+                  if (confirm) {
+                    await _deleteAllContribuables();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                              "Tous les contribuables ont été supprimés.")),
+                    );
+                  }
+                },
               ),
               ListTile(
-                leading: const Icon(Icons.person_add),
-                title: const Text('Ajouter Utilisateur'),
-                onTap: () => Navigator.pushNamed(context, '/addUser'),
+                leading: const Icon(Icons.file_upload),
+                title: const Text('Importer via Excel'),
+                onTap: () async {
+                  // await importExcel(context);
+                },
               ),
-              ListTile(
-                leading: const Icon(Icons.search),
-                title: const Text('Rechercher'),
-                onTap: () => Navigator.pushNamed(context, '/search'),
-              ),
-              if (isAdmin) ...[
-                ListTile(
-                  leading: const Icon(Icons.refresh),
-                  title: const Text('Réinitialiser les contribuables'),
-                  onTap: () async {
-                    bool confirm = await _showConfirmationDialog(
-                      context,
-                      "Êtes-vous sûr de vouloir réinitialiser les contribuables ?",
-                    ) as bool;
-                    if (confirm) {
-                      await _resetContribuables();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Tous les contribuables ont été réinitialisés.")),
-                      );
-                    }
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.delete),
-                  title: const Text('Supprimer tous les contribuables'),
-                  onTap: () async {
-                    bool confirm = await _showConfirmationDialog(
-                      context,
-                      "Êtes-vous sûr de vouloir supprimer tous les contribuables ? Cette action est irréversible.",
-                    ) as bool;
-                    if (confirm) {
-                      await _deleteAllContribuables();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Tous les contribuables ont été supprimés.")),
-                      );
-                    }
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.file_upload),
-                  title: const Text('Importer via Excel'),
-                  onTap: () async {
-                    // await importExcel(context);
-                  },
-                ),
-              ],
             ],
-          ),
+          ],
         ),
-body: isAdmin ? _adminPages[_selectedIndex] : _pages[_selectedIndex],
+      ),
+      body: isAdmin ? _adminPages[_selectedIndex] : _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.orange,
@@ -343,5 +347,11 @@ body: isAdmin ? _adminPages[_selectedIndex] : _pages[_selectedIndex],
               ],
       ),
     );
+  }
+
+  synModifications(BuildContext context) {
+    // Votre code pour synchroniser les modifications locales avec l'API
+     UserRepository().syncUsers();
+     ServiceContribuables().syncContribuables(context);
   }
 }

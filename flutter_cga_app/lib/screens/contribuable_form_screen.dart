@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cga_app/services/api_service_contribuables.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_cga_app/models/contribuable_model.dart';
-import 'package:flutter_cga_app/services/database_service.dart';
 
 class ContribuableFormScreen extends StatefulWidget {
   final ContribuableModel? contribuable;
@@ -35,13 +34,11 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
       _codeUniteGestion,
       _uniteGestion;
   late String _codeClient, _statut, _localisation, _distributeur, _ancienCga;
-  late int _paiement, _validate, _traite, _upToDate;
+  late int _paiement, _validate, _traite, _upToDate, _reste;
   late DateTime? _creationDate, _updateDate;
   late ContribuableModel _contribuable;
 
-
-
-    // Exemple de méthode pour afficher les toasts
+  // Exemple de méthode pour afficher les toasts
   void _showToast(String message) {
     Fluttertoast.showToast(
       msg: message,
@@ -53,7 +50,6 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
       fontSize: 14.0,
     );
   }
-
 
   @override
   void dispose() {
@@ -67,36 +63,38 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Récupérer les arguments uniquement une fois
-      final args = ModalRoute.of(context)?.settings.arguments;
-      if (args is ContribuableModel) {
-        setState(() {
-          _contribuable = args;
-          _numero = _contribuable.numero ?? '';
-          _raisonSociale = _contribuable.raisonSociale ?? '';
-          _sigle = _contribuable.sigle ?? '';
-          _niu = _contribuable.niu ?? '';
-          _activitePrincipale = _contribuable.activitePrincipale ?? '';
-          _tel = _contribuable.tel ?? '';
-          _email = _contribuable.email ?? '';
-          _codeRegime = _contribuable.codeRegime ?? '';
-          _regime = _contribuable.regime ?? '';
-          _sigleCga = _contribuable.sigleCga ?? '';
-          _cga = _contribuable.cga ?? '';
-          _codeUniteGestion = _contribuable.codeUniteGestion ?? '';
-          _uniteGestion = _contribuable.uniteGestion ?? '';
-          _codeClient = _contribuable.codeClient ?? '';
-          _paiement = _contribuable.paiement ?? 0;
-          _statut = _contribuable.statut ?? 'ancien';
-          _localisation = _contribuable.localisation ?? '';
-          _distributeur = _contribuable.distributeur ?? '';
-          _ancienCga = _contribuable.ancienCga ?? '';
-          _validate = _contribuable.validate ?? 0;
-          _traite = _contribuable.traite ?? 0;
-          
-        });
-      } else {
-        print('Aucun contribuable passé en argument');
-      }
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is ContribuableModel) {
+      setState(() {
+        _contribuable = args;
+        _numero = _contribuable.numero ?? '';
+        _raisonSociale = _contribuable.raisonSociale ?? '';
+        _sigle = _contribuable.sigle ?? '';
+        _niu = _contribuable.niu ?? '';
+        _activitePrincipale = _contribuable.activitePrincipale ?? '';
+        _tel = _contribuable.tel ?? '';
+        _email = _contribuable.email ?? '';
+        _codeRegime = _contribuable.codeRegime ?? '';
+        _regime = _contribuable.regime ?? '';
+        _sigleCga = _contribuable.sigleCga ?? '';
+        _cga = _contribuable.cga ?? '';
+        _codeUniteGestion = _contribuable.codeUniteGestion ?? '';
+        _uniteGestion = _contribuable.uniteGestion ?? '';
+        _codeClient = _contribuable.codeClient ?? '';
+        _paiement = _contribuable.paiement;
+        _statut = _contribuable.statut;
+        _localisation = _contribuable.localisation ?? '';
+        _distributeur = _contribuable.distributeur ?? '';
+        _ancienCga = _contribuable.ancienCga ?? '';
+        _validate = _contribuable.validate ?? 0;
+        _traite = _contribuable.traite ?? 0;
+        _reste = _contribuable.statut == 'ancien'
+            ? 50000 - _contribuable.paiement
+            : 75000 - _contribuable.paiement ?? 0;
+      });
+    } else {
+      print('Aucun contribuable passé en argument');
+    }
   }
 
   @override
@@ -122,6 +120,9 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
       _codeClient = _contribuable.codeClient ?? '';
       _paiement = _contribuable.paiement ?? 0;
       _statut = _contribuable.statut ?? 'ancien';
+      _reste = _contribuable.statut == 'ancien'
+          ? 50000 - _contribuable.paiement
+          : 75000 - _contribuable.paiement ?? 0;
       _localisation = _contribuable.localisation ?? '';
       _distributeur = _contribuable.distributeur ?? '';
       _ancienCga = _contribuable.ancienCga ?? '';
@@ -129,11 +130,11 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
       _traite = _contribuable.traite ?? 0;
       _upToDate = _contribuable.upToDate ?? 0;
       _creationDate = _contribuable.creationDate != null
-        ? DateTime.tryParse(_contribuable.creationDate!)
-        : null;
-    _updateDate = _contribuable.updateDate != null
-        ? DateTime.tryParse(_contribuable.updateDate!)
-        : null;
+          ? DateTime.tryParse(_contribuable.creationDate!)
+          : null;
+      _updateDate = _contribuable.updateDate != null
+          ? DateTime.tryParse(_contribuable.updateDate!)
+          : null;
     } else {
       _contribuable = ContribuableModel();
       _numero = '';
@@ -160,6 +161,7 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
       _upToDate = 0;
       _creationDate = null;
       _updateDate = null;
+      _reste = 50000;
     }
   }
 
@@ -253,17 +255,17 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
                 ),
                 onChanged: (value) => _email = value,
               ),
-              TextFormField(
-                initialValue: _codeRegime,
-                decoration: const InputDecoration(
-                  labelText: 'Code Régime',
-                  labelStyle: TextStyle(color: Colors.black),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.orange),
-                  ),
-                ),
-                onChanged: (value) => _codeRegime = value,
-              ),
+              // TextFormField(
+              //   initialValue: _codeRegime,
+              //   decoration: const InputDecoration(
+              //     labelText: 'Code Régime',
+              //     labelStyle: TextStyle(color: Colors.black),
+              //     focusedBorder: UnderlineInputBorder(
+              //       borderSide: BorderSide(color: Colors.orange),
+              //     ),
+              //   ),
+              //   onChanged: (value) => _codeRegime = value,
+              // ),
               TextFormField(
                 initialValue: _regime,
                 decoration: const InputDecoration(
@@ -275,39 +277,39 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
                 ),
                 onChanged: (value) => _regime = value,
               ),
-              TextFormField(
-                initialValue: _sigleCga,
-                decoration: const InputDecoration(
-                  labelText: 'Sigle CGA',
-                  labelStyle: TextStyle(color: Colors.black),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.orange),
-                  ),
-                ),
-                onChanged: (value) => _sigleCga = value,
-              ),
-              TextFormField(
-                initialValue: _cga,
-                decoration: const InputDecoration(
-                  labelText: 'CGA',
-                  labelStyle: TextStyle(color: Colors.black),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.orange),
-                  ),
-                ),
-                onChanged: (value) => _cga = value,
-              ),
-              TextFormField(
-                initialValue: _codeUniteGestion,
-                decoration: const InputDecoration(
-                  labelText: 'Code Unité Gestion',
-                  labelStyle: TextStyle(color: Colors.black),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.orange),
-                  ),
-                ),
-                onChanged: (value) => _codeUniteGestion = value,
-              ),
+              // TextFormField(
+              //   initialValue: _sigleCga,
+              //   decoration: const InputDecoration(
+              //     labelText: 'Sigle CGA',
+              //     labelStyle: TextStyle(color: Colors.black),
+              //     focusedBorder: UnderlineInputBorder(
+              //       borderSide: BorderSide(color: Colors.orange),
+              //     ),
+              //   ),
+              //   onChanged: (value) => _sigleCga = value,
+              // ),
+              // TextFormField(
+              //   initialValue: _cga,
+              //   decoration: const InputDecoration(
+              //     labelText: 'CGA',
+              //     labelStyle: TextStyle(color: Colors.black),
+              //     focusedBorder: UnderlineInputBorder(
+              //       borderSide: BorderSide(color: Colors.orange),
+              //     ),
+              //   ),
+              //   onChanged: (value) => _cga = value,
+              // ),
+              // TextFormField(
+              //   initialValue: _codeUniteGestion,
+              //   decoration: const InputDecoration(
+              //     labelText: 'Code Unité Gestion',
+              //     labelStyle: TextStyle(color: Colors.black),
+              //     focusedBorder: UnderlineInputBorder(
+              //       borderSide: BorderSide(color: Colors.orange),
+              //     ),
+              //   ),
+              //   onChanged: (value) => _codeUniteGestion = value,
+              // ),
               TextFormField(
                 initialValue: _uniteGestion,
                 decoration: const InputDecoration(
@@ -329,27 +331,6 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
                   ),
                 ),
                 onChanged: (value) => _codeClient = value,
-              ),
-              TextFormField(
-                initialValue: _paiement.toString(),
-                decoration: const InputDecoration(
-                  labelText: 'Paiement',
-                  labelStyle: TextStyle(color: Colors.black),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.orange),
-                  ),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Ce champ est obligatoire';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Veuillez entrer un nombre valide';
-                  }
-                  return null;
-                },
-                onChanged: (value) => _paiement = int.parse(value),
               ),
               DropdownButtonFormField<String>(
                 value: _statut,
@@ -373,6 +354,44 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
                 },
                 onSaved: (value) => _statut = value!,
               ),
+              TextFormField(
+                initialValue: _paiement.toString(),
+                decoration: const InputDecoration(
+                  labelText: 'Paiement',
+                  labelStyle: TextStyle(color: Colors.black),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.orange),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Ce champ est obligatoire';
+                  }
+                  if (int.tryParse(value) == null) {
+                    return 'Veuillez entrer un nombre valide';
+                  }
+                  return null;
+                },
+                onChanged: (value) => () {
+                  _paiement = int.parse(value);
+                  _reste = _statut == 'ancien'
+                      ? 50000 - int.parse(value)
+                      : 75000 - int.parse(value);
+                },
+              ),
+
+              TextFormField(
+                  readOnly: true,
+                  initialValue: _reste.toString(),
+                  decoration: const InputDecoration(
+                    labelText: 'Reste',
+                    labelStyle: TextStyle(color: Colors.black),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.orange),
+                    ),
+                  )),
+
               TextFormField(
                 initialValue: _localisation,
                 decoration: const InputDecoration(
@@ -398,7 +417,7 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
               TextFormField(
                 initialValue: _ancienCga,
                 decoration: const InputDecoration(
-                  labelText: 'Ancien CGA',
+                  labelText: 'CGA Actuel',
                   labelStyle: TextStyle(color: Colors.black),
                   focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.orange),
@@ -425,8 +444,8 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
                       email: _email,
                       codeRegime: _codeRegime,
                       regime: _regime,
-                      sigleCga: _sigleCga,
-                      cga: _cga,
+                      sigleCga: "La Voix Du Barman",
+                      cga: "LA VOIX DU BARMAN",
                       codeUniteGestion: _codeUniteGestion,
                       uniteGestion: _uniteGestion,
                       codeClient: _codeClient,
@@ -446,17 +465,16 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
                     pendingNotifier.value = true;
 
                     await ServiceContribuables().createContribuable(
-                      contribuableData: newContribuable.toMap(),
-                      statusNotifier: statusNotifier,
-                      pendingNotifier: pendingNotifier,
-                      messageNotifier: messageNotifier,
-                      onSuccess: () {
-                        // Action en cas de succès
-                        _showToast("Contribuable ajouté avec succès !");
-                        Navigator.pushNamed(context, '/contribList');
-                      },
-                      creation: _contribuable.id == null ? true : false
-                    );
+                        contribuableData: newContribuable.toMap(),
+                        statusNotifier: statusNotifier,
+                        pendingNotifier: pendingNotifier,
+                        messageNotifier: messageNotifier,
+                        onSuccess: () {
+                          // Action en cas de succès
+                          _showToast("Contribuable ajouté avec succès !");
+                          Navigator.pushNamed(context, '/contribList');
+                        },
+                        creation: _contribuable.id == null ? true : false);
 
                     // Affiche le message après la tentative (succès ou erreur)
                     _showToast(messageNotifier.value);
@@ -474,7 +492,8 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : Text(_contribuable.id == null ? 'Ajouter' : 'Modifier');
+                        : Text(
+                            _contribuable.id == null ? 'Ajouter' : 'Modifier');
                   },
                 ),
               ),

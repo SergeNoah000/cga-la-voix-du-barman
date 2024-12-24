@@ -1,7 +1,5 @@
 // Synchronisation des opérations CRUD en ligne et en local
 import 'dart:convert';
-import 'dart:developer';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_cga_app/models/user_model.dart';
@@ -15,7 +13,7 @@ class UserRepository {
   final String serverUrl = ApiService().baseUrl;
 
   // Insertion d'un utilisateur
-  Future<void> addUser(
+  Future<void> addUser1(
       {required UserModel user,
       required ValueNotifier<String> statusNotifier,
       required ValueNotifier<bool> pendingNotifier,
@@ -67,7 +65,7 @@ class UserRepository {
   }
 
   // Mise à jour d'un utilisateur
-  Future<void> updateUser(
+  Future<void> updateUser1(
       {required UserModel user,
       required ValueNotifier<String> statusNotifier,
       required ValueNotifier<bool> pendingNotifier,
@@ -131,7 +129,7 @@ class UserRepository {
   }
 
   // Suppression d'un utilisateur
-  Future<void> deleteUser(
+  Future<void> deleteUser1(
       {required int id,
       required ValueNotifier<String> statusNotifier,
       required ValueNotifier<bool> pendingNotifier,
@@ -177,6 +175,84 @@ class UserRepository {
     }
   }
 
+  // Insertion d'un utilisateur
+  Future<void> addUser(
+      {required UserModel user,
+      required ValueNotifier<String> statusNotifier,
+      required ValueNotifier<bool> pendingNotifier,
+      required ValueNotifier<String> messageNotifier,
+      required VoidCallback onSuccess}) async {
+    try {
+      pendingNotifier.value = true;
+      statusNotifier.value = 'En cours';
+      messageNotifier.value = 'Ajout de l\'utilisateur en cours...';
+
+      // Ajouter en local uniquement
+      await dbService.insertUser(user);
+
+      statusNotifier.value = 'Succès';
+      messageNotifier.value = 'Utilisateur ajouté localement !';
+      onSuccess();
+    } catch (e) {
+      statusNotifier.value = 'Erreur';
+      messageNotifier.value = 'Erreur lors de l\'ajout local : $e';
+    } finally {
+      pendingNotifier.value = false;
+    }
+  }
+
+  // Mise à jour d'un utilisateur
+  Future<void> updateUser(
+      {required UserModel user,
+      required ValueNotifier<String> statusNotifier,
+      required ValueNotifier<bool> pendingNotifier,
+      required ValueNotifier<String> messageNotifier,
+      required VoidCallback onSuccess}) async {
+    try {
+      pendingNotifier.value = true;
+      statusNotifier.value = 'En cours';
+      messageNotifier.value = 'Mise à jour de l\'utilisateur en cours...';
+
+      // Mettre à jour en local uniquement
+      await dbService.updateUser(user);
+
+      statusNotifier.value = 'Succès';
+      messageNotifier.value = 'Utilisateur mis à jour localement !';
+      onSuccess();
+    } catch (e) {
+      statusNotifier.value = 'Erreur';
+      messageNotifier.value = 'Erreur lors de la mise à jour locale : $e';
+    } finally {
+      pendingNotifier.value = false;
+    }
+  }
+
+  // Suppression d'un utilisateur
+  Future<void> deleteUser(
+      {required int id,
+      required ValueNotifier<String> statusNotifier,
+      required ValueNotifier<bool> pendingNotifier,
+      required ValueNotifier<String> messageNotifier,
+      required VoidCallback onSuccess}) async {
+    try {
+      pendingNotifier.value = true;
+      statusNotifier.value = 'En cours';
+      messageNotifier.value = 'Suppression de l\'utilisateur en cours...';
+
+      // Supprimer en local uniquement
+      await dbService.deleteUser(id);
+
+      statusNotifier.value = 'Succès';
+      messageNotifier.value = 'Utilisateur supprimé localement !';
+      onSuccess();
+    } catch (e) {
+      statusNotifier.value = 'Erreur';
+      messageNotifier.value = 'Erreur lors de la suppression locale : $e';
+    } finally {
+      pendingNotifier.value = false;
+    }
+  }
+
   Future<List<UserModel>> getRemoteUsers() async {
     try {
       final data = {
@@ -213,7 +289,7 @@ class UserRepository {
                   : null,
               creationDate: data['creationDate'],
               updateDate: data['updateDate'],
-              role: data['role'] ?? 'Utilisateur', // Rôle par défaut
+              role: data['role'] ?? 'utilisateur',
             );
           }).toList();
         } else {
@@ -235,37 +311,66 @@ class UserRepository {
   }
 
   /// Synchronisation des utilisateurs distants avec les utilisateurs locaux
-  Future<void> syncUsers() async {
+  Future<bool> syncUsers() async {
     try {
-      // Récupérer les utilisateurs distants
-      List<UserModel> remoteUsers = await getRemoteUsers();
+      // Récupérer les utilisateurs ajoutés localement
+      List<UserModel> addedUsers = await dbService.getAddedUsers();
 
-      // Récupérer les utilisateurs locaux
-      List<UserModel> localUsers = await getLocalUsers();
+      // Récupérer les utilisateurs modifiés localement
+      List<UserModel> updatedUsers = await dbService.getUpdatedUsers();
 
-      // Supprimer tous les utilisateur dans la bd locale
-      await dbService.deleteAllUsers();
+      // Récupérer les utilisateurs supprimés localement
+      List<int> deletedUserIds = await dbService.getDeletedUserIds();
 
-      // Convertir en Map pour un accès rapide par ID
-      Map<int, UserModel> localUsersMap = {
-        for (var user in localUsers) user.id!: user
+      // Préparer les données à envoyer à l'API
+      final data = {
+        'api/sync-users': 'true',
+        'added_users': addedUsers.map((user) => user.toMap()).toList(),
+        'updated_users': updatedUsers.map((user) => user.toMap()).toList(),
+        'deleted_users': deletedUserIds,
       };
 
-      // Synchronisation des utilisateurs
-      for (var remoteUser in remoteUsers) {
-        // Ajouter l'utilisateur distant qui n'existe pas localement
-        await dbService.insertUser(remoteUser);
-      }
+      final formData = data.entries
+          .map((entry) =>
+              '${entry.key}=${Uri.encodeComponent(entry.value.toString())}')
+          .join('&');
 
-      // Supprimer les utilisateurs locaux qui n'existent pas à distance
-      for (var userId in localUsersMap.keys) {
-        await dbService.deleteUser(userId);
-      }
+      print("Body de la requete à envoyer: " + formData);
 
-      print("Synchronisation des utilisateurs terminée avec succès.");
+      // Envoyer les données de synchronisation à l'API
+      final response = await http.post(
+        Uri.parse(serverUrl),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: formData,
+      );
+      print("Response de la requete à envoyer: " + response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Récupérer la dernière version des utilisateurs depuis l'API
+        List<UserModel> remoteUsers = await getRemoteUsers();
+        print("Remotes Users: ");
+        print(remoteUsers.map((user) => user.toMap()));
+
+        // Supprimer les données locales obsolètes
+        await dbService.deleteAllUsers();
+
+        // Insérer les utilisateurs synchronisés localement
+        for (var remoteUser in remoteUsers) {
+          await dbService.insertUser(remoteUser);
+          await dbService.markAsSynced(remoteUser.id as int);
+        }
+
+        print("Synchronisation des utilisateurs terminée avec succès.");
+        return true;
+      } else {
+        final errorMessage = jsonDecode(response.body)['msg'] ??
+            'Erreur inconnue lors de la synchronisation des utilisateurs';
+        print(errorMessage);
+        return false;
+      }
     } catch (e, stackTrace) {
       print("Erreur lors de la synchronisation des utilisateurs: $e");
       print("Traceback: $stackTrace");
+      return false;
     }
   }
 
@@ -273,6 +378,4 @@ class UserRepository {
   Future<List<UserModel>> getLocalUsers() async {
     return await dbService.getUsers();
   }
-
-  // Fonction
 }

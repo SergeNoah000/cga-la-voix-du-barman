@@ -22,6 +22,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
   ValueNotifier<bool> pendingNotifier = ValueNotifier(false);
   ValueNotifier<String> messageNotifier = ValueNotifier('');
   ValueNotifier<String> statusNotifier = ValueNotifier('');
+  late bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -89,16 +90,27 @@ class _UserFormScreenState extends State<UserFormScreen> {
                 onSaved: (value) => _fullname = value!,
               ),
               TextFormField(
+                obscureText: _obscurePassword,                
                 initialValue: _password,
-                decoration: const InputDecoration(
+                decoration:  InputDecoration(
                   labelText: 'Mot de Passe',
-                  labelStyle: TextStyle(color: Colors.black),
-                  focusedBorder: UnderlineInputBorder(
+                  labelStyle: const TextStyle(color: Colors.black),
+                  focusedBorder: const UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.orange),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.orange, // Icône orange
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
                   ),
                 ),
                 validator: (value) => value == null || value.isEmpty ? 'Ce champ est obligatoire' : null,
-                obscureText: true,
                 onSaved: (value) => _password = value!,
               ),
               DropdownButtonFormField<String>(

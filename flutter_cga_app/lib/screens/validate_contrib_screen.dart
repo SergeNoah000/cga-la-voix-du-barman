@@ -28,7 +28,6 @@ class _NonValidatedContribuablesTableState
   }
 
   Future<void> _fetchNonValidatedAndNonTraiteContribuables() async {
-    final service = DatabaseService();
     try {
       List<ContribuableModel> contribuables =
           await ServiceContribuables().getNonValidatedAndNonTraiteContribuables(
