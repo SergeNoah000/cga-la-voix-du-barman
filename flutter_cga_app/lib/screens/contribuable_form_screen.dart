@@ -378,7 +378,7 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
                   _reste = _statut == 'ancien'
                       ? 50000 - int.parse(value)
                       : 75000 - int.parse(value);
-                },
+                },  
               ),
 
               TextFormField(

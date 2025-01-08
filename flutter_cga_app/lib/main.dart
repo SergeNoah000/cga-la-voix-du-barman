@@ -119,15 +119,15 @@ class _MainScreenState extends State<MainScreen> {
 
       // Configuration des pages disponibles
       _pages = [
-        ContribuableFormScreen(),
+        const ContribuableFormScreen(),
         ContribuablesTable(),
-        AccountScreen(),
+        const AccountScreen(),
       ];
 
       _adminPages = [
-        ContribuableFormScreen(),
+        const ContribuableFormScreen(),
         ContribuablesTable(),
-        UserListScreen(),
+        const UserListScreen(),
         const NonValidatedContribuablesTable(), // Ajout de la page de validation pour admin
         const AccountScreen(),
       ];
