@@ -350,6 +350,7 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
                 onChanged: (String? newValue) {
                   setState(() {
                     _statut = newValue!;
+                    _reste = _statut == 'ancien' ? 50000 - _paiement : 70000 - _paiement;
                   });
                 },
                 onSaved: (value) => _statut = value!,
@@ -371,27 +372,32 @@ class _ContribuableFormScreenState extends State<ContribuableFormScreen> {
                   if (int.tryParse(value) == null) {
                     return 'Veuillez entrer un nombre valide';
                   }
+                  final int paiement = int.parse(value);
+                  if (_statut == 'ancien' && paiement > 50000) {
+                    return 'Le paiement doit être inférieur ou égal à 50000';
+                  } else if (_statut != 'ancien' && paiement > 75000) {
+                    return 'Le paiement doit être inférieur ou égal à 75000';
+                  }
                   return null;
                 },
-                onChanged: (value) => () {
-                  _paiement = int.parse(value);
-                  _reste = _statut == 'ancien'
-                      ? 50000 - int.parse(value)
-                      : 75000 - int.parse(value);
-                },  
-              ),
-
+                onChanged: (value) {
+                  setState(() {
+                    _paiement = int.tryParse(value) ?? 0;
+                    _reste = _statut == 'ancien' ? 50000 - _paiement : 75000 - _paiement;
+                  });
+                },
+              ),              
               TextFormField(
-                  readOnly: true,
-                  initialValue: _reste.toString(),
-                  decoration: const InputDecoration(
-                    labelText: 'Reste',
-                    labelStyle: TextStyle(color: Colors.black),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.orange),
-                    ),
-                  )),
-
+                readOnly: true,
+                controller: TextEditingController(text: _reste.toString()),
+                decoration: const InputDecoration(
+                  labelText: 'Reste',
+                  labelStyle: TextStyle(color: Colors.black),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.orange),
+                  ),
+                ),
+              ),
               TextFormField(
                 initialValue: _localisation,
                 decoration: const InputDecoration(

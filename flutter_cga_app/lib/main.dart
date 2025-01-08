@@ -67,8 +67,24 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+    setState(() {
+      _pages = [
+        const ContribuableFormScreen(),
+        ContribuablesTable(),
+        const AccountScreen(),
+      ];
+
+      _adminPages = [
+        const ContribuableFormScreen(),
+        ContribuablesTable(),
+        const UserListScreen(),
+        const NonValidatedContribuablesTable(),
+        const AccountScreen(),
+      ];
+    });
+
     _checkUserLoginStatus();
-    UserRepository().syncUsers();
+    // UserRepository().syncUsers();
   }
 
   // Fonction pour réinitialiser les contribuables
@@ -107,31 +123,22 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _checkUserLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    final userInfo =
-        prefs.getString('userInfo'); // Simule les données utilisateur
-    final userRole = prefs
-        .getString('role'); // Récupération du rôle depuis SharedPreferences
-
-    setState(() {
-      isAuthenticated = userInfo != null;
-      isAdmin = userRole != 'admin'; // Vérifie si le rôle est admin
-      isLoading = false;
-
-      // Configuration des pages disponibles
-      _pages = [
-        const ContribuableFormScreen(),
-        ContribuablesTable(),
-        const AccountScreen(),
-      ];
-
-      _adminPages = [
-        const ContribuableFormScreen(),
-        ContribuablesTable(),
-        const UserListScreen(),
-        const NonValidatedContribuablesTable(), // Ajout de la page de validation pour admin
-        const AccountScreen(),
-      ];
-    });
+    final userInfo = prefs.getString('userInfo');
+    if (userInfo == null) {
+      setState(() {
+      isAuthenticated = false;
+      isAdmin = false;
+      isLoading = false; // Le chargement est terminé
+       }); //
+    } else {
+      final userRole = jsonDecode(userInfo)['role'];
+      print(userInfo.runtimeType);
+      setState(() {
+        isAuthenticated = true;
+        isAdmin = userRole == 'admin' || userRole == 'secretaire' ; 
+        isLoading = false; 
+      });
+    }
   }
 
 // Future<void> importExcel(BuildContext context) async {
@@ -351,7 +358,7 @@ class _MainScreenState extends State<MainScreen> {
 
   synModifications(BuildContext context) {
     // Votre code pour synchroniser les modifications locales avec l'API
-     UserRepository().syncUsers();
-     ServiceContribuables().syncContribuables(context);
+    UserRepository().syncUsers();
+    ServiceContribuables().syncContribuables(context);
   }
 }

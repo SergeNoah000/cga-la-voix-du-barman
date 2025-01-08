@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_cga_app/models/contribuable_model.dart';
 import 'package:flutter_cga_app/models/user_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -17,10 +19,23 @@ class DatabaseService {
   }
 
   Future<Database> _initDatabase() async {
+    // Vérifie si la plateforme est un bureau (desktop)
+    if (kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.linux ||
+            defaultTargetPlatform == TargetPlatform.macOS)
+        ) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+
+    // Définit le chemin de la base de données
     String path = join(await getDatabasesPath(), 'user_database.db');
+
+    // Ouvre la base de données avec la configuration appropriée
     return await openDatabase(
       path,
-      version: 2, // Augmenter la version pour appliquer les migrations
+      version: 2,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -78,7 +93,6 @@ class DatabaseService {
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Ajout de la colonne `status` si elle n'existe pas encore
       await db.execute("ALTER TABLE contribuables ADD COLUMN status TEXT");
       await db.execute("ALTER TABLE users ADD COLUMN status TEXT");
     }

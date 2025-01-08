@@ -341,7 +341,7 @@ class ServiceContribuables {
           };
 
           // Encodage du body
-          final formData = requestBody.entries
+          final formData2 = requestBody.entries
               .map((entry) =>
                   '${entry.key}=${Uri.encodeComponent(entry.value.toString())}')
               .join('&');
@@ -351,7 +351,7 @@ class ServiceContribuables {
           final response2 = await http.post(
             Uri.parse(ApiService().baseUrl),
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: formData,
+            body: formData2,
           );
 
           // print("Reponse : status code : ${response2.statusCode}; length: ${response2.contentLength}");
@@ -360,18 +360,33 @@ class ServiceContribuables {
           // print("Response code : " + response2.statusCode.toString());
 
           if (response2.statusCode == 200) {
-            final data = jsonDecode(response2.body) ;
-            // print(data);
-            final contribs = userRole == 'admin' || userRole == 'secretaire'
-              ? data : ['data'].cast<Map<String, dynamic>>();
-            for (var contrib in contribs) {
-              _dbService.insertContribuablAfterSync(
-                  ContribuableModel.fromMap(contrib));
+            final data2 = jsonDecode(response2.body);
+            print("Données reçues : $data2");
+
+            // Vérifiez si "data" existe dans la réponse
+            if (data2 is Map<String, dynamic> && data2.containsKey('data')) {
+              var dataValue = data2['data'];
+              print(dataValue.runtimeType);
+              print(dataValue);
+              final contribs = data2['data'] as List;
+
+              for (var contrib in contribs) {
+                _dbService.insertContribuablAfterSync(
+                  ContribuableModel.fromMap(contrib as Map<String, dynamic>),
+                );
+              }
+            }else{
+              for (var contrib in data2) {
+                _dbService.insertContribuablAfterSync(
+                  ContribuableModel.fromMap(contrib as Map<String, dynamic>),
+                );
+              }
             }
             print("Synchronisation des contribuables terminée avec succès.");
             notifyStatus(context, "success", "Synchronisation réussie !");
           } else {
-            print("Erreur HTTP pour la dernière requete : statut: ${response2.statusCode} \n body:${response2.body} ");
+            print(
+                "Erreur HTTP pour la dernière requete : statut: ${response2.statusCode} \n body:${response2.body} ");
             notifyStatus(
                 context, "error", "Erreur réseau lors de la synchronisation.");
           }
@@ -381,7 +396,8 @@ class ServiceContribuables {
               "Échec de la synchronisation : ${result['message']}");
         }
       } else {
-        print("Erreur HTTP lors de l'envoie de la première requete:  statut: ${response.statusCode} \n body:${response.body} ");
+        print(
+            "Erreur HTTP lors de l'envoie de la première requete:  statut: ${response.statusCode} \n body:${response.body} ");
         notifyStatus(
             context, "error", "Erreur réseau lors de la synchronisation.");
       }
